@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>近くの食堂さがし — 星・レビュー件数・距離・写真で絞り込み</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --line: #e4e7ec;
+    --text: #1a1d24;
+    --muted: #667085;
+    --brand: #ff5b4a;
+    --brand-dark: #e6432f;
+    --star: #ffb400;
+    --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171c;
+      --card: #1d2127;
+      --line: #2c313a;
+      --text: #f0f2f5;
+      --muted: #98a2b3;
+      --shadow: 0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+  header h1 { font-size: 1.4rem; margin: 8px 0 2px; }
+  header p { color: var(--muted); margin: 0 0 16px; font-size: .9rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* --- APIキー設定 --- */
+  details.setup summary {
+    cursor: pointer; font-weight: 600; list-style: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  details.setup summary::-webkit-details-marker { display: none; }
+  details.setup summary::before { content: "⚙️"; }
+  .setup-body { margin-top: 12px; }
+  .setup-body ol { padding-left: 20px; margin: 8px 0; color: var(--muted); font-size: .85rem; }
+  .setup-body a { color: var(--brand); }
+  .key-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .key-row input { flex: 1; min-width: 220px; }
+
+  label.field { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  input, select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--bg); color: var(--text); font-size: .95rem; font-family: inherit;
+  }
+  input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1px; border-color: var(--brand); }
+
+  /* --- ジャンル（複数選択チップ）--- */
+  .genre-block { margin-bottom: 14px; }
+  .genre-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .genre-head .clear { font-size: .78rem; color: var(--brand); background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip span {
+    display: inline-block; padding: 7px 13px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
+    font-size: .86rem; cursor: pointer; user-select: none; transition: all .12s;
+  }
+  .chip input:checked + span { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
+  .chip span:hover { border-color: var(--brand); }
+  .chip input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 11px 16px; border: none; border-radius: 10px;
+    background: var(--brand); color: #fff; font-weight: 700; font-size: .95rem;
+    cursor: pointer; font-family: inherit; transition: background .15s;
+  }
+  .btn:hover { background: var(--brand-dark); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.secondary { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
+  .btn.secondary:hover { background: rgba(255,91,74,.08); }
+  .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  #map { width: 100%; height: 320px; border-radius: 14px; margin-bottom: 16px; background: var(--line); }
+
+  .status { font-size: .9rem; color: var(--muted); margin: 4px 2px 12px; min-height: 1.2em; }
+  .status.err { color: var(--brand-dark); font-weight: 600; }
+
+  .result-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+  .result-head h2 { font-size: 1.05rem; margin: 0; }
+  .result-head .count { color: var(--muted); font-size: .85rem; }
+  .sort-inline { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--muted); }
+  .sort-inline select { width: auto; padding: 6px 10px; }
+
+  .list { display: grid; gap: 12px; }
+  .place {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px; box-shadow: var(--shadow);
+  }
+  .place .num {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--brand); color: #fff; font-weight: 700; font-size: .8rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* 写真サムネイル */
+  .thumb {
+    flex: 0 0 auto; width: 96px; height: 96px; border-radius: 12px; object-fit: cover;
+    background: var(--line); cursor: pointer; position: relative; overflow: hidden;
+    border: none; padding: 0; display: block;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .photo-count {
+    position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,.6); color: #fff;
+    font-size: .68rem; padding: 1px 6px; border-radius: 999px; font-weight: 700;
+  }
+  .thumb.empty {
+    display: flex; align-items: center; justify-content: center; cursor: default;
+    color: var(--muted); font-size: 1.6rem;
+  }
+  .place .body { flex: 1; min-width: 0; }
+  .place .name { font-weight: 700; font-size: 1rem; margin: 0 0 4px; }
+  .place .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: .88rem; }
+  .stars { color: var(--star); letter-spacing: 1px; }
+  .rating-num { font-weight: 700; }
+  .reviews { color: var(--muted); }
+  .dist { font-weight: 700; color: var(--brand); }
+  .price { color: #12b76a; font-weight: 700; }
+  .badge { font-size: .72rem; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+  .badge.open { background: rgba(18,183,106,.14); color: #12b76a; }
+  .badge.closed { background: rgba(240,68,56,.14); color: #f04438; }
+  .place .addr { color: var(--muted); font-size: .82rem; margin: 6px 0 0; }
+  .place .links { margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .place .links a, .review-toggle {
+    color: var(--brand); font-size: .85rem; text-decoration: none; font-weight: 600;
+    background: none; border: none; cursor: pointer; padding: 0; font-family: inherit;
+  }
+  .place .links a:hover, .review-toggle:hover { text-decoration: underline; }
+
+  /* クチコミ */
+  .reviews-box { margin-top: 10px; display: none; }
+  .reviews-box.open { display: block; }
+  .review { border-top: 1px solid var(--line); padding: 10px 0 2px; }
+  .review:first-child { border-top: none; }
+  .review .rhead { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+  .review .ravatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--line); }
+  .review .rauthor { font-weight: 700; font-size: .85rem; }
+  .review .rstars { color: var(--star); font-size: .8rem; }
+  .review .rtime { color: var(--muted); font-size: .76rem; }
+  .review .rtext { font-size: .85rem; color: var(--text); margin: 2px 0 0; white-space: pre-wrap; }
+
+  .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+  .hint { font-size: .78rem; color: var(--muted); margin-top: 4px; }
+
+  /* 写真ギャラリーのモーダル */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; z-index: 50;
+           align-items: center; justify-content: center; padding: 16px; }
+  .modal.open { display: flex; }
+  .modal-inner { max-width: 900px; width: 100%; max-height: 90vh; overflow: auto; }
+  .modal-title { color: #fff; font-weight: 700; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-title button { background: rgba(255,255,255,.15); color: #fff; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-weight: 700; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+  .gallery img { width: 100%; border-radius: 10px; display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🏍️ ツーリング飯さがし</h1>
+    <p>ジャンル・星の数・レビュー件数・距離（最大50km）で絞り込み、写真とクチコミも見られます。</p>
+  </header>
+
+  <!-- APIキー設定 -->
+  <div class="card">
+    <details class="setup" id="setupBox">
+      <summary>Google Maps APIキーの設定</summary>
+      <div class="setup-body">
+        <p style="font-size:.85rem;color:var(--muted);margin:0">
+          このアプリは Google の地図・店舗データを使います。ご自身のAPIキーを入力してください（ブラウザ内にのみ保存され、外部には送信しません）。
+        </p>
+        <ol>
+          <li><a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> でプロジェクトを作成</li>
+          <li>「<b>Maps JavaScript API</b>」と「<b>Places API (New)</b>」を有効化</li>
+          <li>「認証情報」→「APIキーを作成」でキーを取得</li>
+          <li>（推奨）キーに「HTTPリファラー」制限をかけて悪用を防止</li>
+        </ol>
+        <div class="key-row">
+          <input type="password" id="apiKey" placeholder="AIza... で始まるAPIキーを貼り付け" autocomplete="off" />
+          <button class="btn" id="saveKey">保存して読み込み</button>
+        </div>
+        <p class="hint" id="keyStatus"></p>
+      </div>
+    </details>
+  </div>
+
+  <!-- 検索条件 -->
+  <div class="card">
+    <div class="genre-block">
+      <div class="genre-head">
+        <label class="field" style="margin:0">ジャンル（複数選択できます）</label>
+        <button type="button" class="clear" id="clearGenres">クリア</button>
+      </div>
+      <div class="chips" id="genreChips"></div>
+    </div>
+
+    <div class="controls">
+      <div>
+        <label class="field" for="keyword">キーワード（任意）</label>
+        <input type="text" id="keyword" placeholder="例: 食堂、名物、ライダー歓迎" />
+      </div>
+      <div>
+        <label class="field" for="radius">距離（検索範囲）</label>
+        <select id="radius">
+          <option value="1000">1 km 以内</option>
+          <option value="3000">3 km 以内</option>
+          <option value="5000">5 km 以内</option>
+          <option value="10000" selected>10 km 以内</option>
+          <option value="20000">20 km 以内</option>
+          <option value="30000">30 km 以内</option>
+          <option value="50000">50 km 以内</option>
+        </select>
+      </div>
+      <div>
+        <label class="field" for="minRating">星の数（最低評価）</label>
+        <select id="minRating">
+          <option value="0">指定なし</option>
+          <option value="3">★3.0 以上</option>
+          <option value="3.5" selected>★3.5 以上</option>
+          <option value="4">★4.0 以上</option>
+          <option value="4.5">★4.5 以上</option>
+        </select>
+      </div>
+      <div>
+        <label class="field" for="minReviews">レビュー件数(最低)</label>
+        <select id="minReviews">
+          <option value="0">指定なし</option>
+          <option value="10">10 件以上</option>
+          <option value="50" selected>50 件以上</option>
+          <option value="100">100 件以上</option>
+          <option value="300">300 件以上</option>
+          <option value="500">500 件以上</option>
+        </select>
+      </div>
+      <div>
+        <label class="field" for="maxPrice">予算（上限）</label>
+        <select id="maxPrice">
+          <option value="0">指定なし</option>
+          <option value="1">¥（安い）</option>
+          <option value="2">¥¥ まで</option>
+          <option value="3">¥¥¥ まで</option>
+          <option value="4">¥¥¥¥ まで</option>
+        </select>
+      </div>
+      <div>
+        <label class="field" for="openNow">営業状況</label>
+        <select id="openNow">
+          <option value="all">すべて</option>
+          <option value="open">今 営業中のみ</option>
+        </select>
+      </div>
+      <div>
+        <label class="field" for="sortBy">並べ替え</label>
+        <select id="sortBy">
+          <option value="distance" selected>距離が近い順</option>
+          <option value="rating">評価が高い順</option>
+          <option value="reviews">レビューが多い順</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="searchBtn">📍 現在地で検索</button>
+      <button class="btn secondary" id="locBtn">現在地だけ取得</button>
+    </div>
+    <p class="status" id="status"></p>
+  </div>
+
+  <div id="map"></div>
+
+  <div class="card" id="resultsCard" style="display:none">
+    <div class="result-head">
+      <h2>検索結果</h2>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span class="count" id="resultCount"></span>
+        <span class="sort-inline">
+          並べ替え：
+          <select id="sortByInline">
+            <option value="distance">距離が近い順</option>
+            <option value="rating">評価が高い順</option>
+            <option value="reviews">レビューが多い順</option>
+          </select>
+        </span>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+
+<!-- 写真ギャラリー -->
+<div class="modal" id="modal">
+  <div class="modal-inner">
+    <div class="modal-title">
+      <span id="modalName"></span>
+      <button id="modalClose">✕ 閉じる</button>
+    </div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   ジャンル定義
+========================================================= */
+const GENRES = [
+  { label: "食堂・レストラン", type: "restaurant" },
+  { label: "和食・定食",       type: "japanese_restaurant" },
+  { label: "ラーメン",         type: "ramen_restaurant" },
+  { label: "寿司",             type: "sushi_restaurant" },
+  { label: "焼肉・BBQ",        type: "barbecue_restaurant" },
+  { label: "海鮮",             type: "seafood_restaurant" },
+  { label: "ステーキ",         type: "steak_house" },
+  { label: "中華",             type: "chinese_restaurant" },
+  { label: "韓国料理",         type: "korean_restaurant" },
+  { label: "イタリアン",       type: "italian_restaurant" },
+  { label: "カレー・インド",   type: "indian_restaurant" },
+  { label: "カフェ",           type: "cafe" },
+  { label: "居酒屋・バー",     type: "bar" },
+  { label: "ファストフード",   type: "fast_food_restaurant" },
+  { label: "ハンバーガー",     type: "hamburger_restaurant" },
+  { label: "ピザ",             type: "pizza_restaurant" },
+  { label: "ベーカリー",       type: "bakery" },
+  { label: "スイーツ",         type: "dessert_restaurant" },
+];
+
+const PRICE_MAP = {
+  PRICE_LEVEL_FREE: 0,
+  PRICE_LEVEL_INEXPENSIVE: 1,
+  PRICE_LEVEL_MODERATE: 2,
+  PRICE_LEVEL_EXPENSIVE: 3,
+  PRICE_LEVEL_VERY_EXPENSIVE: 4,
+};
+
+/* =========================================================
+   状態
+========================================================= */
+const state = {
+  apiKey: localStorage.getItem("gmaps_api_key") || "",
+  mapsLoaded: false,
+  userLoc: null,
+  map: null,
+  userMarker: null,
+  placeMarkers: [],
+  libs: {},
+  lastRows: [],
+  lastTotal: 0,
+};
+
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status");
+function setStatus(msg, isErr = false) {
+  statusEl.textContent = msg;
+  statusEl.classList.toggle("err", isErr);
+}
+
+/* =========================================================
+   ジャンルチップ
+========================================================= */
+function buildGenreChips() {
+  const wrap = $("genreChips");
+  wrap.innerHTML = "";
+  GENRES.forEach((g, i) => {
+    const label = document.createElement("label");
+    label.className = "chip";
+    label.innerHTML =
+      `<input type="checkbox" value="${g.type}"${i === 0 ? " checked" : ""} />` +
+      `<span>${g.label}</span>`;
+    wrap.appendChild(label);
+  });
+}
+function getSelectedTypes() {
+  return [...document.querySelectorAll("#genreChips input:checked")].map((el) => el.value);
+}
+$("clearGenres")?.addEventListener("click", () => {
+  document.querySelectorAll("#genreChips input:checked").forEach((el) => (el.checked = false));
+});
+
+/* =========================================================
+   APIキー
+========================================================= */
+function initKeyUI() {
+  if (state.apiKey) {
+    $("apiKey").value = state.apiKey;
+    $("keyStatus").textContent = "✅ APIキーは保存済みです。";
+  } else {
+    $("setupBox").open = true;
+  }
+}
+$("saveKey").addEventListener("click", async () => {
+  const key = $("apiKey").value.trim();
+  if (!key) { $("keyStatus").textContent = "⚠️ キーを入力してください。"; return; }
+  state.apiKey = key;
+  localStorage.setItem("gmaps_api_key", key);
+  state.mapsLoaded = false;
+  $("keyStatus").textContent = "読み込み中…";
+  try {
+    await loadMaps();
+    $("keyStatus").textContent = "✅ 読み込み成功。検索できます。";
+    $("setupBox").open = false;
+  } catch (e) {
+    $("keyStatus").textContent = "❌ 読み込み失敗: " + e.message;
+  }
+});
+
+/* =========================================================
+   Maps 読み込み
+========================================================= */
+function loadMaps() {
+  return new Promise((resolve, reject) => {
+    if (!state.apiKey) return reject(new Error("APIキーが未設定です"));
+    if (state.mapsLoaded && window.google?.maps) return resolve();
+    document.querySelectorAll("script[data-gmaps]").forEach((s) => s.remove());
+    window.__gmapsResolve = resolve;
+    window.__gmapsReject = reject;
+    const script = document.createElement("script");
+    script.dataset.gmaps = "1";
+    script.async = true;
+    script.src =
+      "https://maps.googleapis.com/maps/api/js?key=" +
+      encodeURIComponent(state.apiKey) +
+      "&libraries=places,geometry,marker&language=ja&region=JP&loading=async&callback=__onGmapsReady";
+    script.onerror = () => reject(new Error("スクリプトの読み込みに失敗しました"));
+    document.head.appendChild(script);
+  });
+}
+window.__onGmapsReady = async function () {
+  try {
+    state.libs.places = await google.maps.importLibrary("places");
+    state.libs.geometry = await google.maps.importLibrary("geometry");
+    state.libs.marker = await google.maps.importLibrary("marker");
+    state.mapsLoaded = true;
+    if (window.__gmapsResolve) window.__gmapsResolve();
+  } catch (e) {
+    if (window.__gmapsReject) window.__gmapsReject(e);
+  }
+};
+
+/* =========================================================
+   地図
+========================================================= */
+async function ensureMap() {
+  if (state.map) return;
+  const { Map } = await google.maps.importLibrary("maps");
+  state.map = new Map($("map"), {
+    center: state.userLoc || { lat: 35.681236, lng: 139.767125 },
+    zoom: 13, mapId: "DEMO_MAP_ID", clickableIcons: false,
+  });
+}
+function clearPlaceMarkers() {
+  state.placeMarkers.forEach((m) => (m.map = null));
+  state.placeMarkers = [];
+}
+
+/* =========================================================
+   現在地
+========================================================= */
+function getLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error("この端末は位置情報に対応していません"));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (err) => {
+        const msg = {
+          1: "位置情報の利用が許可されませんでした。ブラウザの設定を確認してください。",
+          2: "現在地を取得できませんでした。",
+          3: "位置情報の取得がタイムアウトしました。",
+        }[err.code] || err.message;
+        reject(new Error(msg));
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  });
+}
+async function updateUserLocation() {
+  setStatus("現在地を取得中…");
+  state.userLoc = await getLocation();
+  await ensureMap();
+  state.map.setCenter(state.userLoc);
+  state.map.setZoom(13);
+  const { AdvancedMarkerElement, PinElement } = state.libs.marker;
+  if (state.userMarker) state.userMarker.map = null;
+  const pin = new PinElement({ background: "#1a73e8", borderColor: "#fff", glyphColor: "#fff", scale: 1.1 });
+  state.userMarker = new AdvancedMarkerElement({
+    map: state.map, position: state.userLoc, title: "現在地", content: pin.element,
+  });
+  setStatus(`現在地を取得しました（${state.userLoc.lat.toFixed(5)}, ${state.userLoc.lng.toFixed(5)}）`);
+}
+$("locBtn").addEventListener("click", async () => {
+  try {
+    if (!state.mapsLoaded) await loadMaps();
+    await updateUserLocation();
+  } catch (e) { setStatus(e.message, true); }
+});
+
+/* =========================================================
+   検索
+========================================================= */
+$("searchBtn").addEventListener("click", async () => {
+  const btn = $("searchBtn");
+  try {
+    if (!state.apiKey) { setStatus("先にAPIキーを設定してください。", true); $("setupBox").open = true; return; }
+    btn.disabled = true;
+    if (!state.mapsLoaded) { setStatus("地図データを読み込み中…"); await loadMaps(); }
+    if (!state.userLoc) await updateUserLocation();
+    await runSearch();
+  } catch (e) {
+    setStatus(e.message, true);
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+async function runSearch() {
+  const { Place, SearchNearbyRankPreference } = state.libs.places;
+  const { spherical } = state.libs.geometry;
+
+  const keyword = $("keyword").value.trim();
+  const selectedTypes = getSelectedTypes();
+  const radius = Number($("radius").value);
+  const minRating = Number($("minRating").value);
+  const minReviews = Number($("minReviews").value);
+  const maxPrice = Number($("maxPrice").value);
+  const openNow = $("openNow").value === "open";
+
+  const fields = [
+    "displayName", "location", "rating", "userRatingCount",
+    "formattedAddress", "businessStatus", "regularOpeningHours",
+    "priceLevel", "googleMapsURI", "primaryTypeDisplayName", "types",
+    "photos", "reviews",
+  ];
+
+  setStatus("周辺のお店を検索中…");
+  let places = [];
+
+  if (keyword) {
+    const req = {
+      textQuery: keyword,
+      fields,
+      locationBias: { center: state.userLoc, radius },
+      maxResultCount: 20,
+      language: "ja", region: "jp",
+    };
+    if (selectedTypes.length === 1) req.includedType = selectedTypes[0];
+    if (openNow) req.isOpenNow = true;
+    ({ places } = await Place.searchByText(req));
+  } else {
+    const req = {
+      fields,
+      locationRestriction: { center: state.userLoc, radius },
+      maxResultCount: 20,
+      rankPreference: SearchNearbyRankPreference.DISTANCE,
+      language: "ja", region: "jp",
+    };
+    req.includedPrimaryTypes = selectedTypes.length
+      ? selectedTypes.slice(0, 50)
+      : ["restaurant", "cafe", "bar", "bakery", "meal_takeaway"];
+    ({ places } = await Place.searchNearby(req));
+  }
+
+  const userLL = new google.maps.LatLng(state.userLoc.lat, state.userLoc.lng);
+  let rows = places.map((p) => {
+    const dist = p.location ? spherical.computeDistanceBetween(userLL, p.location) : null;
+    const priceNum = p.priceLevel != null ? (PRICE_MAP[p.priceLevel] ?? null) : null;
+    return {
+      place: p,
+      name: p.displayName || "（名称不明）",
+      rating: p.rating ?? null,
+      reviews: p.userRatingCount ?? 0,
+      distance: dist,
+      priceNum,
+      address: p.formattedAddress || "",
+      openNow: p.regularOpeningHours?.openNow ?? null,
+      uri: p.googleMapsURI || null,
+      genre: p.primaryTypeDisplayName || "",
+      types: p.types || [],
+      photos: p.photos || [],
+      reviewList: p.reviews || [],
+    };
+  });
+
+  const total = rows.length;
+  rows = rows.filter((r) => {
+    if (minRating > 0 && (r.rating === null || r.rating < minRating)) return false;
+    if (minReviews > 0 && r.reviews < minReviews) return false;
+    if (maxPrice > 0 && r.priceNum !== null && r.priceNum > maxPrice) return false;
+    if (openNow && r.openNow === false) return false;
+    if (keyword && selectedTypes.length > 1) {
+      if (!r.types.some((t) => selectedTypes.includes(t))) return false;
+    }
+    return true;
+  });
+
+  state.lastRows = rows;
+  state.lastTotal = total;
+  applySortAndRender();
+}
+
+/* =========================================================
+   並べ替え & 表示
+========================================================= */
+function applySortAndRender() {
+  const sortBy = $("sortByInline").value;
+  const rows = [...state.lastRows];
+  rows.sort((a, b) => {
+    if (sortBy === "rating") return (b.rating ?? -1) - (a.rating ?? -1);
+    if (sortBy === "reviews") return (b.reviews ?? 0) - (a.reviews ?? 0);
+    return (a.distance ?? Infinity) - (b.distance ?? Infinity);
+  });
+  render(rows, state.lastTotal);
+}
+$("sortBy").addEventListener("change", (e) => {
+  $("sortByInline").value = e.target.value;
+  if (state.lastRows.length || state.lastTotal) applySortAndRender();
+});
+$("sortByInline").addEventListener("change", (e) => {
+  $("sortBy").value = e.target.value;
+  applySortAndRender();
+});
+
+function starString(rating) {
+  if (rating === null) return "—";
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.5;
+  return "★".repeat(full) + (half ? "☆" : "") + "☆".repeat(Math.max(0, 5 - full - (half ? 1 : 0)));
+}
+function fmtDist(m) {
+  if (m === null) return "距離不明";
+  return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(m < 10000 ? 2 : 1)} km`;
+}
+function priceStr(n) { return n === null ? "" : "¥".repeat(Math.max(1, n)); }
+
+function render(rows, total) {
+  const listEl = $("list");
+  listEl.innerHTML = "";
+  $("resultsCard").style.display = "block";
+
+  const filteredOut = total - rows.length;
+  $("resultCount").textContent =
+    `${rows.length} 件表示` + (filteredOut > 0 ? `（条件で ${filteredOut} 件を除外）` : "");
+
+  clearPlaceMarkers();
+
+  if (rows.length === 0) {
+    listEl.innerHTML = `<div class="empty">条件に合うお店が見つかりませんでした。<br>星やレビュー件数の条件をゆるめる、距離を広げる、ジャンルを増やすと見つかりやすくなります。</div>`;
+    setStatus(`検索完了（周辺 ${total} 件中、条件に合うお店はありませんでした）`);
+    return;
+  }
+
+  const { AdvancedMarkerElement, PinElement } = state.libs.marker;
+  const bounds = new google.maps.LatLngBounds();
+  if (state.userLoc) bounds.extend(state.userLoc);
+
+  rows.forEach((r, i) => {
+    const el = document.createElement("div");
+    el.className = "place";
+    const openBadge =
+      r.openNow === true ? `<span class="badge open">営業中</span>` :
+      r.openNow === false ? `<span class="badge closed">営業時間外</span>` : "";
+    const priceBadge = r.priceNum !== null ? `<span class="price">${priceStr(r.priceNum)}</span>` : "";
+
+    // サムネイル
+    let thumbHtml;
+    if (r.photos.length) {
+      const url = r.photos[0].getURI({ maxWidth: 200, maxHeight: 200 });
+      thumbHtml =
+        `<button class="thumb" data-photo="${i}" title="写真を見る">` +
+        `<img src="${url}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />` +
+        (r.photos.length > 1 ? `<span class="photo-count">📷 ${r.photos.length}</span>` : "") +
+        `</button>`;
+    } else {
+      thumbHtml = `<div class="thumb empty">🍽️</div>`;
+    }
+
+    const reviewToggle = r.reviewList.length
+      ? `<button class="review-toggle" data-rev="${i}">💬 クチコミ ${r.reviewList.length}件 ▼</button>`
+      : "";
+
+    el.innerHTML = `
+      <div class="num">${i + 1}</div>
+      ${thumbHtml}
+      <div class="body">
+        <p class="name">${escapeHtml(r.name)}</p>
+        <div class="meta">
+          <span><span class="stars">${starString(r.rating)}</span>
+                <span class="rating-num">${r.rating !== null ? r.rating.toFixed(1) : "—"}</span></span>
+          <span class="reviews">レビュー ${r.reviews.toLocaleString()} 件</span>
+          <span class="dist">📍 ${fmtDist(r.distance)}</span>
+          ${priceBadge}
+          ${openBadge}
+          ${r.genre ? `<span class="reviews">${escapeHtml(r.genre)}</span>` : ""}
+        </div>
+        ${r.address ? `<p class="addr">${escapeHtml(r.address)}</p>` : ""}
+        <div class="links">
+          ${r.uri ? `<a href="${r.uri}" target="_blank" rel="noopener">Googleマップで開く →</a>` : ""}
+          ${reviewToggle}
+        </div>
+        <div class="reviews-box" data-revbox="${i}"></div>
+      </div>`;
+    listEl.appendChild(el);
+
+    // サムネイルクリック → ギャラリー
+    const thumbBtn = el.querySelector(".thumb[data-photo]");
+    if (thumbBtn) thumbBtn.addEventListener("click", () => openGallery(r));
+
+    // クチコミ開閉
+    const revBtn = el.querySelector(".review-toggle");
+    if (revBtn) {
+      const box = el.querySelector(`[data-revbox="${i}"]`);
+      revBtn.addEventListener("click", () => {
+        const open = box.classList.toggle("open");
+        if (open && !box.dataset.filled) { box.innerHTML = renderReviews(r.reviewList); box.dataset.filled = "1"; }
+        revBtn.innerHTML = `💬 クチコミ ${r.reviewList.length}件 ${open ? "▲" : "▼"}`;
+      });
+    }
+
+    if (r.place.location && state.map) {
+      const pin = new PinElement({ background: "#ff5b4a", borderColor: "#fff", glyphColor: "#fff", glyph: String(i + 1) });
+      const marker = new AdvancedMarkerElement({
+        map: state.map, position: r.place.location, title: r.name, content: pin.element,
+      });
+      marker.addListener("click", () => {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.animate([{ background: "rgba(255,91,74,.15)" }, { background: "transparent" }], { duration: 1200 });
+      });
+      state.placeMarkers.push(marker);
+      bounds.extend(r.place.location);
+    }
+  });
+
+  if (state.map && !bounds.isEmpty()) state.map.fitBounds(bounds, 60);
+  const sortLabel = { distance: "距離が近い順", rating: "評価が高い順", reviews: "レビューが多い順" }[$("sortByInline").value];
+  setStatus(`検索完了（${rows.length} 件を${sortLabel}に表示）`);
+}
+
+/* クチコミ描画 */
+function renderReviews(list) {
+  return list.slice(0, 5).map((rv) => {
+    const author = rv.authorAttribution?.displayName || "利用者";
+    const avatar = rv.authorAttribution?.photoURI || "";
+    const rating = rv.rating ?? null;
+    const time = rv.relativePublishTimeDescription || "";
+    const text = rv.text || "";
+    return `
+      <div class="review">
+        <div class="rhead">
+          ${avatar ? `<img class="ravatar" src="${avatar}" alt="" loading="lazy" />` : `<span class="ravatar"></span>`}
+          <span class="rauthor">${escapeHtml(author)}</span>
+          ${rating !== null ? `<span class="rstars">${starString(rating)}</span>` : ""}
+          <span class="rtime">${escapeHtml(time)}</span>
+        </div>
+        ${text ? `<p class="rtext">${escapeHtml(text)}</p>` : ""}
+      </div>`;
+  }).join("");
+}
+
+/* 写真ギャラリー */
+function openGallery(r) {
+  $("modalName").textContent = r.name;
+  const g = $("gallery");
+  g.innerHTML = r.photos.map((ph) => {
+    const url = ph.getURI({ maxWidth: 800, maxHeight: 800 });
+    return `<img src="${url}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />`;
+  }).join("");
+  $("modal").classList.add("open");
+}
+function closeGallery() { $("modal").classList.remove("open"); $("gallery").innerHTML = ""; }
+$("modalClose").addEventListener("click", closeGallery);
+$("modal").addEventListener("click", (e) => { if (e.target.id === "modal") closeGallery(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeGallery(); });
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* =========================================================
+   起動
+========================================================= */
+buildGenreChips();
+initKeyUI();
+if (state.apiKey) {
+  loadMaps().then(() => ensureMap()).catch((e) => setStatus("地図の初期化に失敗: " + e.message, true));
+}
+</script>
+</body>
+</html>
