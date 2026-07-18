@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ツーリング飯さがし — エリアで選んで星・レビュー・写真で絞り込み</title>
 <style>
+  /* ライト（既定） */
   :root {
     --bg: #f6f7f9;
     --card: #ffffff;
@@ -16,8 +17,18 @@
     --star: #ffb400;
     --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
   }
+  /* ダーク（明示指定） */
+  :root[data-theme="dark"] {
+    --bg: #14171c;
+    --card: #1d2127;
+    --line: #2c313a;
+    --text: #f0f2f5;
+    --muted: #98a2b3;
+    --shadow: 0 1px 3px rgba(0,0,0,.4);
+  }
+  /* 自動（data-theme無し＝OSに追従） */
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme]) {
       --bg: #14171c;
       --card: #1d2127;
       --line: #2c313a;
@@ -36,6 +47,7 @@
     -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+  .head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   header h1 { font-size: 1.4rem; margin: 8px 0 2px; }
   header p { color: var(--muted); margin: 0 0 16px; font-size: .9rem; }
 
@@ -48,18 +60,36 @@
     margin-bottom: 16px;
   }
 
-  /* --- APIキー設定 --- */
-  details.setup summary {
+  /* テーマ切替 */
+  .theme-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .theme-seg label { position: relative; }
+  .theme-seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .theme-seg span {
+    display: block; padding: 6px 11px; cursor: pointer; font-size: .82rem; font-weight: 700;
+    color: var(--muted); background: var(--card); user-select: none;
+  }
+  .theme-seg input:checked + span { background: var(--brand); color: #fff; }
+
+  details.setup summary, details.usage summary {
     cursor: pointer; font-weight: 600; list-style: none;
     display: flex; align-items: center; gap: 8px;
   }
-  details.setup summary::-webkit-details-marker { display: none; }
+  details.setup summary::-webkit-details-marker, details.usage summary::-webkit-details-marker { display: none; }
   details.setup summary::before { content: "⚙️"; }
+  details.usage summary::before { content: "📊"; }
   .setup-body { margin-top: 12px; }
   .setup-body ol { padding-left: 20px; margin: 8px 0; color: var(--muted); font-size: .85rem; }
-  .setup-body a { color: var(--brand); }
+  .setup-body a, .usage-body a { color: var(--brand); }
   .key-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .key-row input { flex: 1; min-width: 220px; }
+
+  /* 利用状況パネル */
+  .usage-body { margin-top: 12px; font-size: .88rem; }
+  .usage-nums { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 8px; }
+  .usage-nums b { font-size: 1.05rem; }
+  .usage-cost { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
+  .usage-links { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+  .usage-links button { background: none; border: none; color: var(--muted); cursor: pointer; font: inherit; text-decoration: underline; padding: 0; }
 
   label.field { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
   input, select {
@@ -68,7 +98,6 @@
   }
   input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1px; border-color: var(--brand); }
 
-  /* --- モード切替（セグメント）--- */
   .mode-seg { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
   .mode-seg label { flex: 1; }
   .mode-seg input { position: absolute; opacity: 0; pointer-events: none; }
@@ -78,7 +107,6 @@
   }
   .mode-seg input:checked + span { background: var(--brand); color: #fff; }
 
-  /* --- チップ（複数/単一選択）--- */
   .block { margin-bottom: 14px; }
   .block-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
   .block-head .clear { font-size: .78rem; color: var(--brand); background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; }
@@ -93,12 +121,18 @@
   .chip input:checked + span { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
   .chip span:hover { border-color: var(--brand); }
   .chip input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
-  /* エリアチップは色を変えて区別 */
   #areaChips .chip input:checked + span { background: #1a73e8; border-color: #1a73e8; }
+
+  /* エリアの地方グループ */
+  .area-group { margin-bottom: 10px; }
+  .area-region { font-size: .74rem; font-weight: 700; color: var(--muted); margin: 0 0 5px; letter-spacing: .04em; }
 
   .or-text { text-align: center; color: var(--muted); font-size: .8rem; margin: 8px 0; }
 
   .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .checkbox { display: flex; align-items: center; gap: 8px; padding: 9px 0; font-size: .9rem; cursor: pointer; }
+  .checkbox input { width: auto; accent-color: var(--brand); width: 18px; height: 18px; }
+
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     padding: 11px 16px; border: none; border-radius: 10px;
@@ -159,6 +193,7 @@
   .badge { font-size: .72rem; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
   .badge.open { background: rgba(18,183,106,.14); color: #12b76a; }
   .badge.closed { background: rgba(240,68,56,.14); color: #f04438; }
+  .badge.chain { background: rgba(102,112,133,.16); color: var(--muted); }
   .place .addr { color: var(--muted); font-size: .82rem; margin: 6px 0 0; }
   .place .links { margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
   .place .links a, .review-toggle {
@@ -196,7 +231,14 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>🏍️ ツーリング飯さがし</h1>
+    <div class="head-row">
+      <h1>🏍️ ツーリング飯さがし</h1>
+      <div class="theme-seg" id="themeSeg" title="表示テーマ">
+        <label><input type="radio" name="theme" value="light" /><span>☀️</span></label>
+        <label><input type="radio" name="theme" value="dark" /><span>🌙</span></label>
+        <label><input type="radio" name="theme" value="auto" /><span>自動</span></label>
+      </div>
+    </div>
     <p>目的エリアを選んで、その周辺（最大50km）のお店を星・レビュー・写真で絞り込み。現在地からの走行距離も表示できます。</p>
   </header>
 
@@ -223,22 +265,43 @@
     </details>
   </div>
 
+  <!-- 利用状況（概算） -->
+  <div class="card">
+    <details class="usage" id="usageBox">
+      <summary>今月のAPI利用（概算）<span id="usageSummary" style="color:var(--muted);font-weight:400;font-size:.85rem;margin-left:6px"></span></summary>
+      <div class="usage-body">
+        <div class="usage-nums">
+          <span>🔍 検索 <b id="uSearches">0</b> 回</span>
+          <span>📷 写真読み込み <b id="uPhotos">0</b> 枚</span>
+        </div>
+        <div class="usage-cost" id="uCost"></div>
+        <p class="hint" style="margin:0">
+          ※ これはアプリが数えた<b>呼び出し回数からの概算</b>です。正確な請求額・実測回数は Google Cloud で確認してください。
+          料金体系：$200無料クレジットは廃止され、<b>SKUごとの月間無料枠</b>（検索=Enterprise系 約1,000回/月、写真=約5,000回/月）方式です。
+        </p>
+        <div class="usage-links">
+          <a href="https://console.cloud.google.com/billing" target="_blank" rel="noopener">💳 実際の請求を見る（Cloud Console）</a>
+          <a href="https://console.cloud.google.com/google/maps-apis/metrics" target="_blank" rel="noopener">📈 実測の呼び出し回数を見る</a>
+          <button id="resetUsage" type="button">カウンタをリセット</button>
+        </div>
+      </div>
+    </details>
+  </div>
+
   <!-- 検索条件 -->
   <div class="card">
-    <!-- 検索の中心モード -->
     <div class="mode-seg">
       <label><input type="radio" name="mode" value="area" checked /><span>🗺️ エリアから探す</span></label>
       <label><input type="radio" name="mode" value="current" /><span>📍 現在地から探す</span></label>
     </div>
 
-    <!-- エリア指定ブロック -->
     <div id="areaBlock">
       <div class="block">
         <div class="block-head">
           <label class="field" style="margin:0">人気エリア（1つ選ぶ）</label>
           <button type="button" class="clear" id="clearArea">クリア</button>
         </div>
-        <div class="chips" id="areaChips"></div>
+        <div id="areaChips"></div>
       </div>
       <div class="or-text">— または —</div>
       <div class="block">
@@ -247,7 +310,6 @@
       </div>
     </div>
 
-    <!-- ジャンル -->
     <div class="block">
       <div class="block-head">
         <label class="field" style="margin:0">ジャンル（複数選択できます）</label>
@@ -327,6 +389,10 @@
           <option value="reviews">レビューが多い順</option>
         </select>
       </div>
+      <div>
+        <label class="field">チェーン店</label>
+        <label class="checkbox"><input type="checkbox" id="excludeChains" /><span>チェーン店を除く</span></label>
+      </div>
     </div>
 
     <div class="actions">
@@ -369,24 +435,79 @@
 
 <script>
 /* =========================================================
-   人気ツーリングエリア（座標つきプリセット）
+   人気ツーリングエリア（地方グループ・座標つき）
 ========================================================= */
-const AREAS = [
-  { label: "琵琶湖（東側）", lat: 35.20,  lng: 136.16 },
-  { label: "伊勢志摩",       lat: 34.43,  lng: 136.79 },
-  { label: "琵琶湖（北・奥びわ湖）", lat: 35.45, lng: 136.13 },
-  { label: "伊吹山・奥伊吹", lat: 35.42,  lng: 136.41 },
-  { label: "京都・美山",     lat: 35.29,  lng: 135.66 },
-  { label: "奈良・吉野",     lat: 34.37,  lng: 135.86 },
-  { label: "高野山",         lat: 34.213, lng: 135.583 },
-  { label: "熊野・尾鷲",     lat: 34.07,  lng: 136.19 },
-  { label: "淡路島",         lat: 34.36,  lng: 134.86 },
-  { label: "六甲・有馬",     lat: 34.77,  lng: 135.24 },
-  { label: "飛騨・高山",     lat: 36.14,  lng: 137.25 },
-  { label: "美ヶ原・ビーナスライン", lat: 36.22, lng: 138.11 },
-  { label: "富士・河口湖",   lat: 35.517, lng: 138.75 },
-  { label: "箱根",           lat: 35.23,  lng: 139.03 },
-  { label: "しまなみ海道",   lat: 34.25,  lng: 133.20 },
+const AREA_GROUPS = [
+  { region: "北海道", items: [
+    { label: "富良野・美瑛", lat: 43.35, lng: 142.47 },
+    { label: "知床・ウトロ", lat: 44.07, lng: 145.10 },
+    { label: "洞爺・支笏湖", lat: 42.60, lng: 140.85 },
+    { label: "宗谷岬・稚内", lat: 45.52, lng: 141.94 },
+    { label: "襟裳岬", lat: 41.92, lng: 143.24 },
+  ]},
+  { region: "東北", items: [
+    { label: "八幡平・十和田", lat: 39.96, lng: 140.85 },
+    { label: "蔵王", lat: 38.14, lng: 140.44 },
+    { label: "裏磐梯・磐梯山", lat: 37.68, lng: 140.07 },
+    { label: "男鹿半島", lat: 39.90, lng: 139.78 },
+    { label: "三陸海岸・宮古", lat: 39.64, lng: 141.95 },
+    { label: "鳥海山", lat: 39.10, lng: 140.05 },
+  ]},
+  { region: "関東", items: [
+    { label: "箱根", lat: 35.23, lng: 139.03 },
+    { label: "奥多摩", lat: 35.81, lng: 139.10 },
+    { label: "秩父", lat: 35.99, lng: 139.08 },
+    { label: "日光・いろは坂", lat: 36.74, lng: 139.50 },
+    { label: "南房総", lat: 34.98, lng: 139.83 },
+    { label: "伊豆半島", lat: 34.87, lng: 138.94 },
+    { label: "ヤビツ峠・丹沢", lat: 35.44, lng: 139.22 },
+  ]},
+  { region: "甲信越", items: [
+    { label: "富士・河口湖", lat: 35.517, lng: 138.75 },
+    { label: "美ヶ原・ビーナスライン", lat: 36.22, lng: 138.11 },
+    { label: "白馬・安曇野", lat: 36.65, lng: 137.86 },
+    { label: "志賀高原", lat: 36.70, lng: 138.52 },
+    { label: "佐渡", lat: 38.02, lng: 138.37 },
+  ]},
+  { region: "東海・北陸", items: [
+    { label: "飛騨・高山", lat: 36.14, lng: 137.25 },
+    { label: "白川郷", lat: 36.26, lng: 136.906 },
+    { label: "能登半島・輪島", lat: 37.39, lng: 136.90 },
+    { label: "伊勢志摩", lat: 34.43, lng: 136.79 },
+    { label: "浜名湖", lat: 34.75, lng: 137.58 },
+    { label: "郡上八幡", lat: 35.75, lng: 136.96 },
+    { label: "立山・黒部", lat: 36.57, lng: 137.66 },
+  ]},
+  { region: "関西", items: [
+    { label: "琵琶湖（東側）", lat: 35.20, lng: 136.16 },
+    { label: "琵琶湖（北・奥びわ湖）", lat: 35.45, lng: 136.13 },
+    { label: "伊吹山・奥伊吹", lat: 35.42, lng: 136.41 },
+    { label: "京都・美山", lat: 35.29, lng: 135.66 },
+    { label: "奈良・吉野", lat: 34.37, lng: 135.86 },
+    { label: "高野山", lat: 34.213, lng: 135.583 },
+    { label: "熊野・尾鷲", lat: 34.07, lng: 136.19 },
+    { label: "淡路島", lat: 34.36, lng: 134.86 },
+    { label: "六甲・有馬", lat: 34.77, lng: 135.24 },
+    { label: "天橋立", lat: 35.57, lng: 135.19 },
+  ]},
+  { region: "中国・四国", items: [
+    { label: "しまなみ海道", lat: 34.25, lng: 133.20 },
+    { label: "蒜山高原", lat: 35.32, lng: 133.62 },
+    { label: "鳥取砂丘", lat: 35.54, lng: 134.23 },
+    { label: "四国カルスト", lat: 33.55, lng: 132.92 },
+    { label: "室戸岬", lat: 33.25, lng: 134.18 },
+    { label: "足摺岬", lat: 32.72, lng: 133.02 },
+    { label: "剣山・見ノ越", lat: 33.86, lng: 134.09 },
+  ]},
+  { region: "九州", items: [
+    { label: "阿蘇", lat: 32.88, lng: 131.10 },
+    { label: "やまなみハイウェイ", lat: 33.09, lng: 131.24 },
+    { label: "別府・湯布院", lat: 33.26, lng: 131.36 },
+    { label: "高千穂", lat: 32.71, lng: 131.31 },
+    { label: "桜島", lat: 31.59, lng: 130.66 },
+    { label: "佐多岬", lat: 31.00, lng: 130.66 },
+    { label: "五島・福江", lat: 32.70, lng: 128.84 },
+  ]},
 ];
 
 const GENRES = [
@@ -410,13 +531,26 @@ const GENRES = [
   { label: "スイーツ",         type: "dessert_restaurant" },
 ];
 
+/* チェーン店の判定キーワード（店名に含まれば除外／バッジ表示） */
+const CHAIN_KEYWORDS = [
+  "マクドナルド","McDonald","スターバックス","Starbucks","ドトール","タリーズ","Tully","コメダ",
+  "サイゼリヤ","ガスト","バーミヤン","ジョナサン","デニーズ","ロイヤルホスト","ココス","COCO'S","ジョイフル","びっくりドンキー",
+  "吉野家","すき家","松屋","なか卯","てんや",
+  "ケンタッキー","KFC","モスバーガー","MOS","ロッテリア","バーガーキング","フレッシュネス","ファーストキッチン","サブウェイ","Subway",
+  "丸亀製麺","はなまるうどん","リンガーハット","餃子の王将","大阪王将","日高屋","幸楽苑","一蘭","一風堂","天下一品","満洲",
+  "CoCo壱番屋","ココ壱","かつや","松のや","やよい軒","大戸屋",
+  "スシロー","くら寿司","はま寿司","かっぱ寿司","銚子丸",
+  "鳥貴族","ワタミ","和民","白木屋","魚民","甘太郎","串カツ田中","焼肉きんぐ","牛角","安楽亭","いきなり!ステーキ","いきなりステーキ","ペッパーランチ",
+  "ミスタードーナツ","ミスド","ドミノ","ピザハット","ピザーラ","ジョリーパスタ","五右衛門","ステーキガスト","夢庵","天丼",
+];
+
 const PRICE_MAP = {
-  PRICE_LEVEL_FREE: 0,
-  PRICE_LEVEL_INEXPENSIVE: 1,
-  PRICE_LEVEL_MODERATE: 2,
-  PRICE_LEVEL_EXPENSIVE: 3,
-  PRICE_LEVEL_VERY_EXPENSIVE: 4,
+  PRICE_LEVEL_FREE: 0, PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2,
+  PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4,
 };
+
+/* コスト概算レート（あくまで目安・2026年時点） */
+const RATE = { searchUSD: 0.035, photoUSD: 0.007, freeSearch: 1000, freePhoto: 5000, jpyPerUsd: 155 };
 
 /* =========================================================
    状態
@@ -424,8 +558,8 @@ const PRICE_MAP = {
 const state = {
   apiKey: localStorage.getItem("gmaps_api_key") || "",
   mapsLoaded: false,
-  userLoc: null,          // 現在地（任意・走行距離の表示に使用）
-  searchCenter: null,     // 検索の中心（現在地 or エリア）
+  userLoc: null,
+  searchCenter: null,
   centerLabel: "",
   map: null,
   userMarker: null,
@@ -443,6 +577,67 @@ function setStatus(msg, isErr = false) {
   statusEl.classList.toggle("err", isErr);
 }
 function getMode() { return document.querySelector('input[name="mode"]:checked').value; }
+function isChain(name) { const n = name || ""; return CHAIN_KEYWORDS.some((k) => n.includes(k)); }
+
+/* =========================================================
+   テーマ切替
+========================================================= */
+function applyTheme(t) {
+  if (t === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("theme", t);
+}
+function initTheme() {
+  const t = localStorage.getItem("theme") || "auto";
+  const radio = document.querySelector(`input[name="theme"][value="${t}"]`);
+  if (radio) radio.checked = true;
+  applyTheme(t);
+  document.querySelectorAll('input[name="theme"]').forEach((r) =>
+    r.addEventListener("change", (e) => applyTheme(e.target.value)));
+}
+
+/* =========================================================
+   利用状況カウンタ
+========================================================= */
+function curMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+function loadUsage() {
+  let all = {};
+  try { all = JSON.parse(localStorage.getItem("usage_v1") || "{}"); } catch (e) {}
+  const m = curMonth();
+  if (!all[m]) all[m] = { searches: 0, photos: 0 };
+  return { all, m };
+}
+function bumpUsage(field, n) {
+  if (!n) return;
+  const { all, m } = loadUsage();
+  all[m][field] = (all[m][field] || 0) + n;
+  localStorage.setItem("usage_v1", JSON.stringify(all));
+  updateUsagePanel();
+}
+function updateUsagePanel() {
+  const { all, m } = loadUsage();
+  const u = all[m];
+  $("uSearches").textContent = u.searches.toLocaleString();
+  $("uPhotos").textContent = u.photos.toLocaleString();
+  const billSearch = Math.max(0, u.searches - RATE.freeSearch) * RATE.searchUSD;
+  const billPhoto = Math.max(0, u.photos - RATE.freePhoto) * RATE.photoUSD;
+  const usd = billSearch + billPhoto;
+  const jpy = Math.round(usd * RATE.jpyPerUsd);
+  const inFree = u.searches <= RATE.freeSearch && u.photos <= RATE.freePhoto;
+  $("uCost").innerHTML = inFree
+    ? `✅ 今月はまだ<b>無料枠の範囲内</b>の見込みです（検索 ${u.searches}/${RATE.freeSearch}・写真 ${u.photos}/${RATE.freePhoto}）。推定コスト <b>$0.00</b>`
+    : `推定コスト <b>$${usd.toFixed(2)}</b>（約 ¥${jpy.toLocaleString()}）　<span class="hint">無料枠超過分のみ計上</span>`;
+  $("usageSummary").textContent = `検索${u.searches}回・写真${u.photos}枚`;
+}
+$("resetUsage").addEventListener("click", () => {
+  const { all, m } = loadUsage();
+  all[m] = { searches: 0, photos: 0 };
+  localStorage.setItem("usage_v1", JSON.stringify(all));
+  updateUsagePanel();
+});
 
 /* =========================================================
    チップ生成
@@ -459,13 +654,24 @@ function buildChips() {
 
   const awrap = $("areaChips");
   awrap.innerHTML = "";
-  AREAS.forEach((a) => {
-    const label = document.createElement("label");
-    label.className = "chip";
-    label.innerHTML = `<input type="radio" name="areaPreset" value="${a.lat},${a.lng}" data-label="${a.label}" /><span>${a.label}</span>`;
-    awrap.appendChild(label);
+  AREA_GROUPS.forEach((grp) => {
+    const box = document.createElement("div");
+    box.className = "area-group";
+    const h = document.createElement("p");
+    h.className = "area-region";
+    h.textContent = grp.region;
+    box.appendChild(h);
+    const chips = document.createElement("div");
+    chips.className = "chips";
+    grp.items.forEach((a) => {
+      const label = document.createElement("label");
+      label.className = "chip";
+      label.innerHTML = `<input type="radio" name="areaPreset" value="${a.lat},${a.lng}" data-label="${a.label}" /><span>${a.label}</span>`;
+      chips.appendChild(label);
+    });
+    box.appendChild(chips);
+    awrap.appendChild(box);
   });
-  // エリアチップを選んだら自由入力をクリア
   awrap.addEventListener("change", () => { $("areaText").value = ""; });
 }
 function getSelectedTypes() {
@@ -477,7 +683,6 @@ $("clearGenres")?.addEventListener("click", () => {
 $("clearArea")?.addEventListener("click", () => {
   document.querySelectorAll('#areaChips input:checked').forEach((el) => (el.checked = false));
 });
-// 自由入力に文字を入れたらエリアチップを解除
 document.addEventListener("input", (e) => {
   if (e.target.id === "areaText" && e.target.value.trim()) {
     document.querySelectorAll('#areaChips input:checked').forEach((el) => (el.checked = false));
@@ -487,15 +692,12 @@ document.addEventListener("input", (e) => {
 /* =========================================================
    モード切替
 ========================================================= */
-document.querySelectorAll('input[name="mode"]').forEach((r) => {
-  r.addEventListener("change", applyMode);
-});
+document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", applyMode));
 function applyMode() {
   const mode = getMode();
   $("areaBlock").classList.toggle("hidden", mode !== "area");
   $("radius").previousElementSibling.textContent = mode === "area" ? "エリアからの範囲" : "現在地からの範囲";
   $("searchBtn").textContent = mode === "area" ? "🗺️ このエリアで検索" : "📍 現在地で検索";
-  // 現在地モードでは「現在地から最低距離」は不要なので隠す
   $("minTripWrap").classList.toggle("hidden", mode === "current");
 }
 
@@ -584,7 +786,6 @@ async function setCenterMarker() {
   if (!state.searchCenter) return;
   const { AdvancedMarkerElement, PinElement } = state.libs.marker;
   if (state.centerMarker) state.centerMarker.map = null;
-  // 現在地が中心のときは重複するので出さない
   if (state.userLoc && state.searchCenter.lat === state.userLoc.lat && state.searchCenter.lng === state.userLoc.lng) return;
   const pin = new PinElement({ background: "#12b76a", borderColor: "#fff", glyphColor: "#fff", glyph: "🏁", scale: 1.1 });
   state.centerMarker = new AdvancedMarkerElement({ map: state.map, position: state.searchCenter, title: state.centerLabel || "エリア中心", content: pin.element });
@@ -621,7 +822,6 @@ $("locBtn").addEventListener("click", async () => {
   try {
     if (!state.mapsLoaded) await loadMaps();
     await acquireLocation();
-    // すでに検索済みなら距離を更新して並べ替え
     if (state.lastRows.length) applySortAndRender();
   } catch (e) { setStatus(e.message, true); }
 });
@@ -632,11 +832,10 @@ $("locBtn").addEventListener("click", async () => {
 async function resolveArea(text) {
   const { Place } = state.libs.places;
   const { places } = await Place.searchByText({
-    textQuery: text,
-    fields: ["location", "displayName"],
-    maxResultCount: 1,
-    language: "ja", region: "jp",
+    textQuery: text, fields: ["location", "displayName"],
+    maxResultCount: 1, language: "ja", region: "jp",
   });
+  bumpUsage("searches", 1);
   if (!places || !places.length || !places[0].location) {
     throw new Error(`「${text}」の場所が見つかりませんでした。別の地名で試してください。`);
   }
@@ -648,7 +847,6 @@ async function getSearchCenter() {
     if (!state.userLoc) await acquireLocation();
     return { center: state.userLoc, label: "現在地" };
   }
-  // area モード
   const radio = document.querySelector('#areaChips input:checked');
   if (radio) {
     const [lat, lng] = radio.value.split(",").map(Number);
@@ -696,6 +894,7 @@ async function runSearch() {
   const minReviews = Number($("minReviews").value);
   const maxPrice = Number($("maxPrice").value);
   const openNow = $("openNow").value === "open";
+  const excludeChains = $("excludeChains").checked;
   const center = state.searchCenter;
 
   const fields = [
@@ -719,29 +918,26 @@ async function runSearch() {
     ({ places } = await Place.searchByText(req));
   } else {
     const req = {
-      fields,
-      locationRestriction: { center, radius },
-      maxResultCount: 20,
-      rankPreference: SearchNearbyRankPreference.DISTANCE,
+      fields, locationRestriction: { center, radius },
+      maxResultCount: 20, rankPreference: SearchNearbyRankPreference.DISTANCE,
       language: "ja", region: "jp",
     };
-    req.includedPrimaryTypes = selectedTypes.length
-      ? selectedTypes.slice(0, 50)
+    req.includedPrimaryTypes = selectedTypes.length ? selectedTypes.slice(0, 50)
       : ["restaurant", "cafe", "bar", "bakery", "meal_takeaway"];
     ({ places } = await Place.searchNearby(req));
   }
+  bumpUsage("searches", 1);
 
   const centerLL = new google.maps.LatLng(center.lat, center.lng);
   let rows = places.map((p) => {
     const distCenter = p.location ? spherical.computeDistanceBetween(centerLL, p.location) : null;
     const priceNum = p.priceLevel != null ? (PRICE_MAP[p.priceLevel] ?? null) : null;
+    const name = p.displayName || "（名称不明）";
     return {
-      place: p, loc: p.location || null,
-      name: p.displayName || "（名称不明）",
+      place: p, loc: p.location || null, name,
       rating: p.rating ?? null,
       reviews: p.userRatingCount ?? 0,
-      distCenter,
-      priceNum,
+      distCenter, priceNum,
       address: p.formattedAddress || "",
       openNow: p.regularOpeningHours?.openNow ?? null,
       uri: p.googleMapsURI || null,
@@ -749,20 +945,24 @@ async function runSearch() {
       types: p.types || [],
       photos: p.photos || [],
       reviewList: p.reviews || [],
+      chain: isChain(name),
     };
   });
 
-  // 位置に依存しないフィルタ
   rows = rows.filter((r) => {
     if (minRating > 0 && (r.rating === null || r.rating < minRating)) return false;
     if (minReviews > 0 && r.reviews < minReviews) return false;
     if (maxPrice > 0 && r.priceNum !== null && r.priceNum > maxPrice) return false;
     if (openNow && r.openNow === false) return false;
+    if (excludeChains && r.chain) return false;
     if (keyword && selectedTypes.length > 1) {
       if (!r.types.some((t) => selectedTypes.includes(t))) return false;
     }
     return true;
   });
+
+  // 表示されるサムネイル写真の枚数をコストに計上（1店1枚）
+  bumpUsage("photos", rows.filter((r) => r.photos.length).length);
 
   state.lastRows = rows;
   state.lastTotal = places.length;
@@ -777,7 +977,6 @@ function computeDistances(rows) {
   const userLL = state.userLoc ? new google.maps.LatLng(state.userLoc.lat, state.userLoc.lng) : null;
   rows.forEach((r) => {
     r.distMe = (userLL && r.loc) ? spherical.computeDistanceBetween(userLL, r.loc) : null;
-    // 表示・並べ替えに使う主距離：現在地があれば走行距離、なければエリア中心からの距離
     r.primary = r.distMe !== null ? r.distMe : r.distCenter;
     r.primaryLabel = r.distMe !== null ? "現在地から" : "エリア中心から";
   });
@@ -787,10 +986,7 @@ function applySortAndRender() {
   const sortBy = $("sortByInline").value;
   let rows = [...state.lastRows];
   computeDistances(rows);
-  // 現在地から最低距離フィルタ（現在地があるときのみ有効）
-  if (minTrip > 0 && state.userLoc) {
-    rows = rows.filter((r) => r.distMe !== null && r.distMe >= minTrip);
-  }
+  if (minTrip > 0 && state.userLoc) rows = rows.filter((r) => r.distMe !== null && r.distMe >= minTrip);
   rows.sort((a, b) => {
     if (sortBy === "rating") return (b.rating ?? -1) - (a.rating ?? -1);
     if (sortBy === "reviews") return (b.reviews ?? 0) - (a.reviews ?? 0);
@@ -826,7 +1022,7 @@ function render(rows, total) {
   clearPlaceMarkers();
 
   if (rows.length === 0) {
-    listEl.innerHTML = `<div class="empty">条件に合うお店が見つかりませんでした。<br>星・レビュー件数をゆるめる、範囲を広げる、ジャンルを増やすと見つかりやすくなります。</div>`;
+    listEl.innerHTML = `<div class="empty">条件に合うお店が見つかりませんでした。<br>星・レビュー件数をゆるめる、範囲を広げる、ジャンルを増やす、チェーン除外を外すと見つかりやすくなります。</div>`;
     setStatus(`検索完了（周辺 ${total} 件中、条件に合うお店はありませんでした）`);
     return;
   }
@@ -842,13 +1038,11 @@ function render(rows, total) {
     const openBadge =
       r.openNow === true ? `<span class="badge open">営業中</span>` :
       r.openNow === false ? `<span class="badge closed">営業時間外</span>` : "";
+    const chainBadge = r.chain ? `<span class="badge chain">チェーン店</span>` : "";
     const priceBadge = r.priceNum !== null ? `<span class="price">${priceStr(r.priceNum)}</span>` : "";
 
-    // 距離表示：主距離＋（現在地がある場合はエリア中心距離も小さく併記）
     let distHtml = `<span class="dist">📍 ${r.primaryLabel} ${fmtDist(r.primary)}</span>`;
-    if (r.distMe !== null && r.distCenter !== null) {
-      distHtml += `<span class="dist-sub">エリア中心 ${fmtDist(r.distCenter)}</span>`;
-    }
+    if (r.distMe !== null && r.distCenter !== null) distHtml += `<span class="dist-sub">エリア中心 ${fmtDist(r.distCenter)}</span>`;
 
     let thumbHtml;
     if (r.photos.length) {
@@ -863,8 +1057,7 @@ function render(rows, total) {
     }
 
     const reviewToggle = r.reviewList.length
-      ? `<button class="review-toggle" data-rev="${i}">💬 クチコミ ${r.reviewList.length}件 ▼</button>`
-      : "";
+      ? `<button class="review-toggle" data-rev="${i}">💬 クチコミ ${r.reviewList.length}件 ▼</button>` : "";
 
     el.innerHTML = `
       <div class="num">${i + 1}</div>
@@ -878,6 +1071,7 @@ function render(rows, total) {
           ${distHtml}
           ${priceBadge}
           ${openBadge}
+          ${chainBadge}
           ${r.genre ? `<span class="reviews">${escapeHtml(r.genre)}</span>` : ""}
         </div>
         ${r.address ? `<p class="addr">${escapeHtml(r.address)}</p>` : ""}
@@ -946,6 +1140,7 @@ function openGallery(r) {
     const url = ph.getURI({ maxWidth: 800, maxHeight: 800 });
     return `<img src="${url}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />`;
   }).join("");
+  bumpUsage("photos", r.photos.length);
   $("modal").classList.add("open");
 }
 function closeGallery() { $("modal").classList.remove("open"); $("gallery").innerHTML = ""; }
@@ -961,9 +1156,11 @@ function escapeHtml(s) {
 /* =========================================================
    起動
 ========================================================= */
+initTheme();
 buildChips();
 applyMode();
 initKeyUI();
+updateUsagePanel();
 if (state.apiKey) {
   loadMaps().then(() => ensureMap()).catch((e) => setStatus("地図の初期化に失敗: " + e.message, true));
 }
