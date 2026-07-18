@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>近くの食堂さがし — 星・レビュー件数・距離・写真で絞り込み</title>
+<title>ツーリング飯さがし — エリアで選んで星・レビュー・写真で絞り込み</title>
 <style>
   :root {
     --bg: #f6f7f9;
@@ -68,10 +68,20 @@
   }
   input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1px; border-color: var(--brand); }
 
-  /* --- ジャンル（複数選択チップ）--- */
-  .genre-block { margin-bottom: 14px; }
-  .genre-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-  .genre-head .clear { font-size: .78rem; color: var(--brand); background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; }
+  /* --- モード切替（セグメント）--- */
+  .mode-seg { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+  .mode-seg label { flex: 1; }
+  .mode-seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .mode-seg span {
+    display: block; text-align: center; padding: 11px 8px; cursor: pointer; font-weight: 700;
+    font-size: .92rem; background: var(--bg); color: var(--muted); user-select: none;
+  }
+  .mode-seg input:checked + span { background: var(--brand); color: #fff; }
+
+  /* --- チップ（複数/単一選択）--- */
+  .block { margin-bottom: 14px; }
+  .block-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .block-head .clear { font-size: .78rem; color: var(--brand); background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { position: relative; }
   .chip input { position: absolute; opacity: 0; pointer-events: none; }
@@ -83,6 +93,10 @@
   .chip input:checked + span { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
   .chip span:hover { border-color: var(--brand); }
   .chip input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+  /* エリアチップは色を変えて区別 */
+  #areaChips .chip input:checked + span { background: #1a73e8; border-color: #1a73e8; }
+
+  .or-text { text-align: center; color: var(--muted); font-size: .8rem; margin: 8px 0; }
 
   .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
   .btn {
@@ -97,7 +111,7 @@
   .btn.secondary:hover { background: rgba(255,91,74,.08); }
   .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 
-  #map { width: 100%; height: 320px; border-radius: 14px; margin-bottom: 16px; background: var(--line); }
+  #map { width: 100%; height: 340px; border-radius: 14px; margin-bottom: 16px; background: var(--line); }
 
   .status { font-size: .9rem; color: var(--muted); margin: 4px 2px 12px; min-height: 1.2em; }
   .status.err { color: var(--brand-dark); font-weight: 600; }
@@ -119,7 +133,6 @@
     background: var(--brand); color: #fff; font-weight: 700; font-size: .8rem;
     display: flex; align-items: center; justify-content: center;
   }
-  /* 写真サムネイル */
   .thumb {
     flex: 0 0 auto; width: 96px; height: 96px; border-radius: 12px; object-fit: cover;
     background: var(--line); cursor: pointer; position: relative; overflow: hidden;
@@ -141,6 +154,7 @@
   .rating-num { font-weight: 700; }
   .reviews { color: var(--muted); }
   .dist { font-weight: 700; color: var(--brand); }
+  .dist-sub { color: var(--muted); font-size: .8rem; font-weight: 600; }
   .price { color: #12b76a; font-weight: 700; }
   .badge { font-size: .72rem; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
   .badge.open { background: rgba(18,183,106,.14); color: #12b76a; }
@@ -153,7 +167,6 @@
   }
   .place .links a:hover, .review-toggle:hover { text-decoration: underline; }
 
-  /* クチコミ */
   .reviews-box { margin-top: 10px; display: none; }
   .reviews-box.open { display: block; }
   .review { border-top: 1px solid var(--line); padding: 10px 0 2px; }
@@ -168,7 +181,6 @@
   .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
   .hint { font-size: .78rem; color: var(--muted); margin-top: 4px; }
 
-  /* 写真ギャラリーのモーダル */
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; z-index: 50;
            align-items: center; justify-content: center; padding: 16px; }
   .modal.open { display: flex; }
@@ -177,13 +189,15 @@
   .modal-title button { background: rgba(255,255,255,.15); color: #fff; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-weight: 700; }
   .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
   .gallery img { width: 100%; border-radius: 10px; display: block; }
+
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>🏍️ ツーリング飯さがし</h1>
-    <p>ジャンル・星の数・レビュー件数・距離（最大50km）で絞り込み、写真とクチコミも見られます。</p>
+    <p>目的エリアを選んで、その周辺（最大50km）のお店を星・レビュー・写真で絞り込み。現在地からの走行距離も表示できます。</p>
   </header>
 
   <!-- APIキー設定 -->
@@ -211,8 +225,31 @@
 
   <!-- 検索条件 -->
   <div class="card">
-    <div class="genre-block">
-      <div class="genre-head">
+    <!-- 検索の中心モード -->
+    <div class="mode-seg">
+      <label><input type="radio" name="mode" value="area" checked /><span>🗺️ エリアから探す</span></label>
+      <label><input type="radio" name="mode" value="current" /><span>📍 現在地から探す</span></label>
+    </div>
+
+    <!-- エリア指定ブロック -->
+    <div id="areaBlock">
+      <div class="block">
+        <div class="block-head">
+          <label class="field" style="margin:0">人気エリア（1つ選ぶ）</label>
+          <button type="button" class="clear" id="clearArea">クリア</button>
+        </div>
+        <div class="chips" id="areaChips"></div>
+      </div>
+      <div class="or-text">— または —</div>
+      <div class="block">
+        <label class="field" for="areaText">地域名で指定（例：琵琶湖 東側、伊勢志摩、美ヶ原）</label>
+        <input type="text" id="areaText" placeholder="行きたい地域・スポット名を入力" />
+      </div>
+    </div>
+
+    <!-- ジャンル -->
+    <div class="block">
+      <div class="block-head">
         <label class="field" style="margin:0">ジャンル（複数選択できます）</label>
         <button type="button" class="clear" id="clearGenres">クリア</button>
       </div>
@@ -222,17 +259,15 @@
     <div class="controls">
       <div>
         <label class="field" for="keyword">キーワード（任意）</label>
-        <input type="text" id="keyword" placeholder="例: 食堂、名物、ライダー歓迎" />
+        <input type="text" id="keyword" placeholder="例: 名物、ライダー歓迎" />
       </div>
       <div>
-        <label class="field" for="radius">距離（検索範囲）</label>
+        <label class="field" for="radius">エリアからの範囲</label>
         <select id="radius">
-          <option value="1000">1 km 以内</option>
-          <option value="3000">3 km 以内</option>
           <option value="5000">5 km 以内</option>
-          <option value="10000" selected>10 km 以内</option>
+          <option value="10000">10 km 以内</option>
           <option value="20000">20 km 以内</option>
-          <option value="30000">30 km 以内</option>
+          <option value="30000" selected>30 km 以内</option>
           <option value="50000">50 km 以内</option>
         </select>
       </div>
@@ -267,6 +302,16 @@
           <option value="4">¥¥¥¥ まで</option>
         </select>
       </div>
+      <div id="minTripWrap">
+        <label class="field" for="minTrip">現在地から最低距離</label>
+        <select id="minTrip">
+          <option value="0" selected>指定なし</option>
+          <option value="10000">10 km 以上</option>
+          <option value="20000">20 km 以上</option>
+          <option value="30000">30 km 以上</option>
+          <option value="50000">50 km 以上</option>
+        </select>
+      </div>
       <div>
         <label class="field" for="openNow">営業状況</label>
         <select id="openNow">
@@ -285,8 +330,8 @@
     </div>
 
     <div class="actions">
-      <button class="btn" id="searchBtn">📍 現在地で検索</button>
-      <button class="btn secondary" id="locBtn">現在地だけ取得</button>
+      <button class="btn" id="searchBtn">🗺️ このエリアで検索</button>
+      <button class="btn secondary" id="locBtn">📍 現在地を取得（走行距離の表示に使用）</button>
     </div>
     <p class="status" id="status"></p>
   </div>
@@ -312,7 +357,6 @@
   </div>
 </div>
 
-<!-- 写真ギャラリー -->
 <div class="modal" id="modal">
   <div class="modal-inner">
     <div class="modal-title">
@@ -325,8 +369,26 @@
 
 <script>
 /* =========================================================
-   ジャンル定義
+   人気ツーリングエリア（座標つきプリセット）
 ========================================================= */
+const AREAS = [
+  { label: "琵琶湖（東側）", lat: 35.20,  lng: 136.16 },
+  { label: "伊勢志摩",       lat: 34.43,  lng: 136.79 },
+  { label: "琵琶湖（北・奥びわ湖）", lat: 35.45, lng: 136.13 },
+  { label: "伊吹山・奥伊吹", lat: 35.42,  lng: 136.41 },
+  { label: "京都・美山",     lat: 35.29,  lng: 135.66 },
+  { label: "奈良・吉野",     lat: 34.37,  lng: 135.86 },
+  { label: "高野山",         lat: 34.213, lng: 135.583 },
+  { label: "熊野・尾鷲",     lat: 34.07,  lng: 136.19 },
+  { label: "淡路島",         lat: 34.36,  lng: 134.86 },
+  { label: "六甲・有馬",     lat: 34.77,  lng: 135.24 },
+  { label: "飛騨・高山",     lat: 36.14,  lng: 137.25 },
+  { label: "美ヶ原・ビーナスライン", lat: 36.22, lng: 138.11 },
+  { label: "富士・河口湖",   lat: 35.517, lng: 138.75 },
+  { label: "箱根",           lat: 35.23,  lng: 139.03 },
+  { label: "しまなみ海道",   lat: 34.25,  lng: 133.20 },
+];
+
 const GENRES = [
   { label: "食堂・レストラン", type: "restaurant" },
   { label: "和食・定食",       type: "japanese_restaurant" },
@@ -362,9 +424,12 @@ const PRICE_MAP = {
 const state = {
   apiKey: localStorage.getItem("gmaps_api_key") || "",
   mapsLoaded: false,
-  userLoc: null,
+  userLoc: null,          // 現在地（任意・走行距離の表示に使用）
+  searchCenter: null,     // 検索の中心（現在地 or エリア）
+  centerLabel: "",
   map: null,
   userMarker: null,
+  centerMarker: null,
   placeMarkers: [],
   libs: {},
   lastRows: [],
@@ -377,21 +442,31 @@ function setStatus(msg, isErr = false) {
   statusEl.textContent = msg;
   statusEl.classList.toggle("err", isErr);
 }
+function getMode() { return document.querySelector('input[name="mode"]:checked').value; }
 
 /* =========================================================
-   ジャンルチップ
+   チップ生成
 ========================================================= */
-function buildGenreChips() {
-  const wrap = $("genreChips");
-  wrap.innerHTML = "";
+function buildChips() {
+  const gwrap = $("genreChips");
+  gwrap.innerHTML = "";
   GENRES.forEach((g, i) => {
     const label = document.createElement("label");
     label.className = "chip";
-    label.innerHTML =
-      `<input type="checkbox" value="${g.type}"${i === 0 ? " checked" : ""} />` +
-      `<span>${g.label}</span>`;
-    wrap.appendChild(label);
+    label.innerHTML = `<input type="checkbox" value="${g.type}"${i === 0 ? " checked" : ""} /><span>${g.label}</span>`;
+    gwrap.appendChild(label);
   });
+
+  const awrap = $("areaChips");
+  awrap.innerHTML = "";
+  AREAS.forEach((a) => {
+    const label = document.createElement("label");
+    label.className = "chip";
+    label.innerHTML = `<input type="radio" name="areaPreset" value="${a.lat},${a.lng}" data-label="${a.label}" /><span>${a.label}</span>`;
+    awrap.appendChild(label);
+  });
+  // エリアチップを選んだら自由入力をクリア
+  awrap.addEventListener("change", () => { $("areaText").value = ""; });
 }
 function getSelectedTypes() {
   return [...document.querySelectorAll("#genreChips input:checked")].map((el) => el.value);
@@ -399,6 +474,30 @@ function getSelectedTypes() {
 $("clearGenres")?.addEventListener("click", () => {
   document.querySelectorAll("#genreChips input:checked").forEach((el) => (el.checked = false));
 });
+$("clearArea")?.addEventListener("click", () => {
+  document.querySelectorAll('#areaChips input:checked').forEach((el) => (el.checked = false));
+});
+// 自由入力に文字を入れたらエリアチップを解除
+document.addEventListener("input", (e) => {
+  if (e.target.id === "areaText" && e.target.value.trim()) {
+    document.querySelectorAll('#areaChips input:checked').forEach((el) => (el.checked = false));
+  }
+});
+
+/* =========================================================
+   モード切替
+========================================================= */
+document.querySelectorAll('input[name="mode"]').forEach((r) => {
+  r.addEventListener("change", applyMode);
+});
+function applyMode() {
+  const mode = getMode();
+  $("areaBlock").classList.toggle("hidden", mode !== "area");
+  $("radius").previousElementSibling.textContent = mode === "area" ? "エリアからの範囲" : "現在地からの範囲";
+  $("searchBtn").textContent = mode === "area" ? "🗺️ このエリアで検索" : "📍 現在地で検索";
+  // 現在地モードでは「現在地から最低距離」は不要なので隠す
+  $("minTripWrap").classList.toggle("hidden", mode === "current");
+}
 
 /* =========================================================
    APIキー
@@ -467,13 +566,28 @@ async function ensureMap() {
   if (state.map) return;
   const { Map } = await google.maps.importLibrary("maps");
   state.map = new Map($("map"), {
-    center: state.userLoc || { lat: 35.681236, lng: 139.767125 },
-    zoom: 13, mapId: "DEMO_MAP_ID", clickableIcons: false,
+    center: { lat: 35.0, lng: 136.5 }, zoom: 8, mapId: "DEMO_MAP_ID", clickableIcons: false,
   });
 }
 function clearPlaceMarkers() {
   state.placeMarkers.forEach((m) => (m.map = null));
   state.placeMarkers = [];
+}
+async function setUserMarker() {
+  if (!state.userLoc) return;
+  const { AdvancedMarkerElement, PinElement } = state.libs.marker;
+  if (state.userMarker) state.userMarker.map = null;
+  const pin = new PinElement({ background: "#1a73e8", borderColor: "#fff", glyphColor: "#fff", glyph: "現", scale: 1.0 });
+  state.userMarker = new AdvancedMarkerElement({ map: state.map, position: state.userLoc, title: "現在地", content: pin.element });
+}
+async function setCenterMarker() {
+  if (!state.searchCenter) return;
+  const { AdvancedMarkerElement, PinElement } = state.libs.marker;
+  if (state.centerMarker) state.centerMarker.map = null;
+  // 現在地が中心のときは重複するので出さない
+  if (state.userLoc && state.searchCenter.lat === state.userLoc.lat && state.searchCenter.lng === state.userLoc.lng) return;
+  const pin = new PinElement({ background: "#12b76a", borderColor: "#fff", glyphColor: "#fff", glyph: "🏁", scale: 1.1 });
+  state.centerMarker = new AdvancedMarkerElement({ map: state.map, position: state.searchCenter, title: state.centerLabel || "エリア中心", content: pin.element });
 }
 
 /* =========================================================
@@ -496,26 +610,57 @@ function getLocation() {
     );
   });
 }
-async function updateUserLocation() {
+async function acquireLocation() {
   setStatus("現在地を取得中…");
   state.userLoc = await getLocation();
   await ensureMap();
-  state.map.setCenter(state.userLoc);
-  state.map.setZoom(13);
-  const { AdvancedMarkerElement, PinElement } = state.libs.marker;
-  if (state.userMarker) state.userMarker.map = null;
-  const pin = new PinElement({ background: "#1a73e8", borderColor: "#fff", glyphColor: "#fff", scale: 1.1 });
-  state.userMarker = new AdvancedMarkerElement({
-    map: state.map, position: state.userLoc, title: "現在地", content: pin.element,
-  });
-  setStatus(`現在地を取得しました（${state.userLoc.lat.toFixed(5)}, ${state.userLoc.lng.toFixed(5)}）`);
+  await setUserMarker();
+  setStatus(`現在地を取得しました（${state.userLoc.lat.toFixed(4)}, ${state.userLoc.lng.toFixed(4)}）走行距離を表示できます`);
 }
 $("locBtn").addEventListener("click", async () => {
   try {
     if (!state.mapsLoaded) await loadMaps();
-    await updateUserLocation();
+    await acquireLocation();
+    // すでに検索済みなら距離を更新して並べ替え
+    if (state.lastRows.length) applySortAndRender();
   } catch (e) { setStatus(e.message, true); }
 });
+
+/* =========================================================
+   エリア中心の解決
+========================================================= */
+async function resolveArea(text) {
+  const { Place } = state.libs.places;
+  const { places } = await Place.searchByText({
+    textQuery: text,
+    fields: ["location", "displayName"],
+    maxResultCount: 1,
+    language: "ja", region: "jp",
+  });
+  if (!places || !places.length || !places[0].location) {
+    throw new Error(`「${text}」の場所が見つかりませんでした。別の地名で試してください。`);
+  }
+  const loc = places[0].location;
+  return { center: { lat: loc.lat(), lng: loc.lng() }, label: places[0].displayName || text };
+}
+async function getSearchCenter() {
+  if (getMode() === "current") {
+    if (!state.userLoc) await acquireLocation();
+    return { center: state.userLoc, label: "現在地" };
+  }
+  // area モード
+  const radio = document.querySelector('#areaChips input:checked');
+  if (radio) {
+    const [lat, lng] = radio.value.split(",").map(Number);
+    return { center: { lat, lng }, label: radio.dataset.label };
+  }
+  const text = $("areaText").value.trim();
+  if (text) {
+    setStatus(`「${text}」の場所を調べています…`);
+    return await resolveArea(text);
+  }
+  throw new Error("エリアを1つ選ぶか、地域名を入力してください。");
+}
 
 /* =========================================================
    検索
@@ -526,7 +671,11 @@ $("searchBtn").addEventListener("click", async () => {
     if (!state.apiKey) { setStatus("先にAPIキーを設定してください。", true); $("setupBox").open = true; return; }
     btn.disabled = true;
     if (!state.mapsLoaded) { setStatus("地図データを読み込み中…"); await loadMaps(); }
-    if (!state.userLoc) await updateUserLocation();
+    const { center, label } = await getSearchCenter();
+    state.searchCenter = center;
+    state.centerLabel = label;
+    await ensureMap();
+    await setCenterMarker();
     await runSearch();
   } catch (e) {
     setStatus(e.message, true);
@@ -547,6 +696,7 @@ async function runSearch() {
   const minReviews = Number($("minReviews").value);
   const maxPrice = Number($("maxPrice").value);
   const openNow = $("openNow").value === "open";
+  const center = state.searchCenter;
 
   const fields = [
     "displayName", "location", "rating", "userRatingCount",
@@ -555,16 +705,14 @@ async function runSearch() {
     "photos", "reviews",
   ];
 
-  setStatus("周辺のお店を検索中…");
+  setStatus(`「${state.centerLabel}」の周辺を検索中…`);
   let places = [];
 
   if (keyword) {
     const req = {
-      textQuery: keyword,
-      fields,
-      locationBias: { center: state.userLoc, radius },
-      maxResultCount: 20,
-      language: "ja", region: "jp",
+      textQuery: keyword, fields,
+      locationBias: { center, radius },
+      maxResultCount: 20, language: "ja", region: "jp",
     };
     if (selectedTypes.length === 1) req.includedType = selectedTypes[0];
     if (openNow) req.isOpenNow = true;
@@ -572,7 +720,7 @@ async function runSearch() {
   } else {
     const req = {
       fields,
-      locationRestriction: { center: state.userLoc, radius },
+      locationRestriction: { center, radius },
       maxResultCount: 20,
       rankPreference: SearchNearbyRankPreference.DISTANCE,
       language: "ja", region: "jp",
@@ -583,16 +731,16 @@ async function runSearch() {
     ({ places } = await Place.searchNearby(req));
   }
 
-  const userLL = new google.maps.LatLng(state.userLoc.lat, state.userLoc.lng);
+  const centerLL = new google.maps.LatLng(center.lat, center.lng);
   let rows = places.map((p) => {
-    const dist = p.location ? spherical.computeDistanceBetween(userLL, p.location) : null;
+    const distCenter = p.location ? spherical.computeDistanceBetween(centerLL, p.location) : null;
     const priceNum = p.priceLevel != null ? (PRICE_MAP[p.priceLevel] ?? null) : null;
     return {
-      place: p,
+      place: p, loc: p.location || null,
       name: p.displayName || "（名称不明）",
       rating: p.rating ?? null,
       reviews: p.userRatingCount ?? 0,
-      distance: dist,
+      distCenter,
       priceNum,
       address: p.formattedAddress || "",
       openNow: p.regularOpeningHours?.openNow ?? null,
@@ -604,7 +752,7 @@ async function runSearch() {
     };
   });
 
-  const total = rows.length;
+  // 位置に依存しないフィルタ
   rows = rows.filter((r) => {
     if (minRating > 0 && (r.rating === null || r.rating < minRating)) return false;
     if (minReviews > 0 && r.reviews < minReviews) return false;
@@ -617,31 +765,42 @@ async function runSearch() {
   });
 
   state.lastRows = rows;
-  state.lastTotal = total;
+  state.lastTotal = places.length;
   applySortAndRender();
 }
 
 /* =========================================================
-   並べ替え & 表示
+   距離計算・並べ替え・表示
 ========================================================= */
+function computeDistances(rows) {
+  const { spherical } = state.libs.geometry;
+  const userLL = state.userLoc ? new google.maps.LatLng(state.userLoc.lat, state.userLoc.lng) : null;
+  rows.forEach((r) => {
+    r.distMe = (userLL && r.loc) ? spherical.computeDistanceBetween(userLL, r.loc) : null;
+    // 表示・並べ替えに使う主距離：現在地があれば走行距離、なければエリア中心からの距離
+    r.primary = r.distMe !== null ? r.distMe : r.distCenter;
+    r.primaryLabel = r.distMe !== null ? "現在地から" : "エリア中心から";
+  });
+}
 function applySortAndRender() {
+  const minTrip = Number($("minTrip").value);
   const sortBy = $("sortByInline").value;
-  const rows = [...state.lastRows];
+  let rows = [...state.lastRows];
+  computeDistances(rows);
+  // 現在地から最低距離フィルタ（現在地があるときのみ有効）
+  if (minTrip > 0 && state.userLoc) {
+    rows = rows.filter((r) => r.distMe !== null && r.distMe >= minTrip);
+  }
   rows.sort((a, b) => {
     if (sortBy === "rating") return (b.rating ?? -1) - (a.rating ?? -1);
     if (sortBy === "reviews") return (b.reviews ?? 0) - (a.reviews ?? 0);
-    return (a.distance ?? Infinity) - (b.distance ?? Infinity);
+    return (a.primary ?? Infinity) - (b.primary ?? Infinity);
   });
   render(rows, state.lastTotal);
 }
-$("sortBy").addEventListener("change", (e) => {
-  $("sortByInline").value = e.target.value;
-  if (state.lastRows.length || state.lastTotal) applySortAndRender();
-});
-$("sortByInline").addEventListener("change", (e) => {
-  $("sortBy").value = e.target.value;
-  applySortAndRender();
-});
+$("sortBy").addEventListener("change", (e) => { $("sortByInline").value = e.target.value; if (state.lastRows.length) applySortAndRender(); });
+$("sortByInline").addEventListener("change", (e) => { $("sortBy").value = e.target.value; applySortAndRender(); });
+$("minTrip").addEventListener("change", () => { if (state.lastRows.length) applySortAndRender(); });
 
 function starString(rating) {
   if (rating === null) return "—";
@@ -650,7 +809,7 @@ function starString(rating) {
   return "★".repeat(full) + (half ? "☆" : "") + "☆".repeat(Math.max(0, 5 - full - (half ? 1 : 0)));
 }
 function fmtDist(m) {
-  if (m === null) return "距離不明";
+  if (m === null || m === undefined) return "距離不明";
   return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(m < 10000 ? 2 : 1)} km`;
 }
 function priceStr(n) { return n === null ? "" : "¥".repeat(Math.max(1, n)); }
@@ -667,14 +826,15 @@ function render(rows, total) {
   clearPlaceMarkers();
 
   if (rows.length === 0) {
-    listEl.innerHTML = `<div class="empty">条件に合うお店が見つかりませんでした。<br>星やレビュー件数の条件をゆるめる、距離を広げる、ジャンルを増やすと見つかりやすくなります。</div>`;
+    listEl.innerHTML = `<div class="empty">条件に合うお店が見つかりませんでした。<br>星・レビュー件数をゆるめる、範囲を広げる、ジャンルを増やすと見つかりやすくなります。</div>`;
     setStatus(`検索完了（周辺 ${total} 件中、条件に合うお店はありませんでした）`);
     return;
   }
 
   const { AdvancedMarkerElement, PinElement } = state.libs.marker;
   const bounds = new google.maps.LatLngBounds();
-  if (state.userLoc) bounds.extend(state.userLoc);
+  if (state.searchCenter) bounds.extend(state.searchCenter);
+  if (getMode() === "current" && state.userLoc) bounds.extend(state.userLoc);
 
   rows.forEach((r, i) => {
     const el = document.createElement("div");
@@ -684,7 +844,12 @@ function render(rows, total) {
       r.openNow === false ? `<span class="badge closed">営業時間外</span>` : "";
     const priceBadge = r.priceNum !== null ? `<span class="price">${priceStr(r.priceNum)}</span>` : "";
 
-    // サムネイル
+    // 距離表示：主距離＋（現在地がある場合はエリア中心距離も小さく併記）
+    let distHtml = `<span class="dist">📍 ${r.primaryLabel} ${fmtDist(r.primary)}</span>`;
+    if (r.distMe !== null && r.distCenter !== null) {
+      distHtml += `<span class="dist-sub">エリア中心 ${fmtDist(r.distCenter)}</span>`;
+    }
+
     let thumbHtml;
     if (r.photos.length) {
       const url = r.photos[0].getURI({ maxWidth: 200, maxHeight: 200 });
@@ -710,7 +875,7 @@ function render(rows, total) {
           <span><span class="stars">${starString(r.rating)}</span>
                 <span class="rating-num">${r.rating !== null ? r.rating.toFixed(1) : "—"}</span></span>
           <span class="reviews">レビュー ${r.reviews.toLocaleString()} 件</span>
-          <span class="dist">📍 ${fmtDist(r.distance)}</span>
+          ${distHtml}
           ${priceBadge}
           ${openBadge}
           ${r.genre ? `<span class="reviews">${escapeHtml(r.genre)}</span>` : ""}
@@ -724,11 +889,9 @@ function render(rows, total) {
       </div>`;
     listEl.appendChild(el);
 
-    // サムネイルクリック → ギャラリー
     const thumbBtn = el.querySelector(".thumb[data-photo]");
     if (thumbBtn) thumbBtn.addEventListener("click", () => openGallery(r));
 
-    // クチコミ開閉
     const revBtn = el.querySelector(".review-toggle");
     if (revBtn) {
       const box = el.querySelector(`[data-revbox="${i}"]`);
@@ -739,26 +902,23 @@ function render(rows, total) {
       });
     }
 
-    if (r.place.location && state.map) {
+    if (r.loc && state.map) {
       const pin = new PinElement({ background: "#ff5b4a", borderColor: "#fff", glyphColor: "#fff", glyph: String(i + 1) });
-      const marker = new AdvancedMarkerElement({
-        map: state.map, position: r.place.location, title: r.name, content: pin.element,
-      });
+      const marker = new AdvancedMarkerElement({ map: state.map, position: r.loc, title: r.name, content: pin.element });
       marker.addListener("click", () => {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.animate([{ background: "rgba(255,91,74,.15)" }, { background: "transparent" }], { duration: 1200 });
       });
       state.placeMarkers.push(marker);
-      bounds.extend(r.place.location);
+      bounds.extend(r.loc);
     }
   });
 
   if (state.map && !bounds.isEmpty()) state.map.fitBounds(bounds, 60);
-  const sortLabel = { distance: "距離が近い順", rating: "評価が高い順", reviews: "レビューが多い順" }[$("sortByInline").value];
-  setStatus(`検索完了（${rows.length} 件を${sortLabel}に表示）`);
+  const sortLabel = { distance: "距離順", rating: "評価順", reviews: "レビュー数順" }[$("sortByInline").value];
+  setStatus(`「${state.centerLabel}」周辺で ${rows.length} 件を${sortLabel}に表示`);
 }
 
-/* クチコミ描画 */
 function renderReviews(list) {
   return list.slice(0, 5).map((rv) => {
     const author = rv.authorAttribution?.displayName || "利用者";
@@ -779,7 +939,6 @@ function renderReviews(list) {
   }).join("");
 }
 
-/* 写真ギャラリー */
 function openGallery(r) {
   $("modalName").textContent = r.name;
   const g = $("gallery");
@@ -802,7 +961,8 @@ function escapeHtml(s) {
 /* =========================================================
    起動
 ========================================================= */
-buildGenreChips();
+buildChips();
+applyMode();
 initKeyUI();
 if (state.apiKey) {
   loadMaps().then(() => ensureMap()).catch((e) => setStatus("地図の初期化に失敗: " + e.message, true));
