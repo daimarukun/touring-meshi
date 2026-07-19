@@ -123,9 +123,20 @@
   .chip input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
   #areaChips .chip input:checked + span { background: #1a73e8; border-color: #1a73e8; }
 
-  /* エリアの地方グループ */
-  .area-group { margin-bottom: 10px; }
-  .area-region { font-size: .74rem; font-weight: 700; color: var(--muted); margin: 0 0 5px; letter-spacing: .04em; }
+  /* エリアの地方グループ（アコーディオン） */
+  details.area-group { margin-bottom: 8px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  details.area-group > summary {
+    list-style: none; cursor: pointer; padding: 10px 12px; font-size: .84rem; font-weight: 700;
+    color: var(--text); background: var(--bg); display: flex; align-items: center; gap: 8px; user-select: none;
+  }
+  details.area-group > summary::-webkit-details-marker { display: none; }
+  details.area-group > summary::before {
+    content: "▶"; font-size: .68rem; color: var(--muted); transition: transform .15s;
+  }
+  details.area-group[open] > summary::before { transform: rotate(90deg); }
+  details.area-group.primary > summary { background: rgba(255,91,74,.10); color: var(--brand-dark); }
+  details.area-group .cnt { margin-left: auto; color: var(--muted); font-weight: 600; font-size: .74rem; }
+  details.area-group .chips { padding: 12px; }
 
   .or-text { text-align: center; color: var(--muted); font-size: .8rem; margin: 8px 0; }
 
@@ -438,6 +449,101 @@
    人気ツーリングエリア（地方グループ・座標つき）
 ========================================================= */
 const AREA_GROUPS = [
+  /* === 拠点（四日市）周辺：分厚く。最初から開いておく === */
+  { region: "三重県（四日市ふきん〜県内）", primary: true, open: true, items: [
+    { label: "四日市（中心）", lat: 34.965, lng: 136.624 },
+    { label: "湯の山温泉・御在所", lat: 35.02, lng: 136.42 },
+    { label: "菰野・鈴鹿スカイライン", lat: 35.01, lng: 136.44 },
+    { label: "桑名・長島", lat: 35.06, lng: 136.68 },
+    { label: "なばなの里", lat: 35.06, lng: 136.73 },
+    { label: "いなべ・藤原岳", lat: 35.12, lng: 136.55 },
+    { label: "鈴鹿サーキット", lat: 34.85, lng: 136.54 },
+    { label: "鈴鹿峠", lat: 34.92, lng: 136.32 },
+    { label: "亀山・関宿", lat: 34.86, lng: 136.42 },
+    { label: "津・美杉", lat: 34.53, lng: 136.25 },
+    { label: "青山高原", lat: 34.65, lng: 136.28 },
+    { label: "松阪", lat: 34.58, lng: 136.53 },
+    { label: "伊勢神宮", lat: 34.46, lng: 136.72 },
+    { label: "鳥羽", lat: 34.48, lng: 136.84 },
+    { label: "志摩・大王崎", lat: 34.28, lng: 136.90 },
+    { label: "名張・赤目四十八滝", lat: 34.62, lng: 136.10 },
+    { label: "伊賀上野", lat: 34.77, lng: 136.13 },
+    { label: "尾鷲・紀北", lat: 34.07, lng: 136.19 },
+    { label: "熊野・鬼ヶ城", lat: 33.89, lng: 136.13 },
+  ]},
+  { region: "愛知県", primary: true, open: true, items: [
+    { label: "名古屋", lat: 35.17, lng: 136.88 },
+    { label: "犬山", lat: 35.38, lng: 136.94 },
+    { label: "瀬戸・猿投", lat: 35.22, lng: 137.08 },
+    { label: "豊田・足助（香嵐渓）", lat: 35.16, lng: 137.42 },
+    { label: "稲武・どんぐりの湯", lat: 35.22, lng: 137.50 },
+    { label: "設楽・段戸高原", lat: 35.14, lng: 137.56 },
+    { label: "茶臼山高原", lat: 35.20, lng: 137.63 },
+    { label: "新城・鳳来寺山", lat: 34.95, lng: 137.55 },
+    { label: "岡崎", lat: 34.95, lng: 137.17 },
+    { label: "蒲郡・三河湾", lat: 34.80, lng: 137.22 },
+    { label: "渥美半島・伊良湖岬", lat: 34.58, lng: 137.10 },
+    { label: "南知多・師崎", lat: 34.70, lng: 136.89 },
+    { label: "常滑・セントレア", lat: 34.88, lng: 136.83 },
+    { label: "一宮・木曽川", lat: 35.30, lng: 136.80 },
+  ]},
+  { region: "滋賀県（琵琶湖）", primary: true, open: true, items: [
+    { label: "大津・比叡山", lat: 35.07, lng: 135.86 },
+    { label: "琵琶湖大橋・堅田", lat: 35.12, lng: 135.93 },
+    { label: "草津・守山", lat: 35.02, lng: 135.96 },
+    { label: "近江八幡", lat: 35.13, lng: 136.10 },
+    { label: "彦根", lat: 35.27, lng: 136.26 },
+    { label: "多賀大社", lat: 35.22, lng: 136.29 },
+    { label: "米原・伊吹山", lat: 35.35, lng: 136.33 },
+    { label: "長浜", lat: 35.38, lng: 136.27 },
+    { label: "余呉湖", lat: 35.50, lng: 136.19 },
+    { label: "奥琵琶湖・海津大崎", lat: 35.46, lng: 136.11 },
+    { label: "マキノ・メタセコイア並木", lat: 35.47, lng: 136.03 },
+    { label: "高島・白鬚神社", lat: 35.28, lng: 136.00 },
+    { label: "比良山系", lat: 35.22, lng: 135.91 },
+    { label: "甲賀・信楽", lat: 34.90, lng: 136.06 },
+  ]},
+
+  /* === その他の地方：たたんでおく（タップで中身を表示） === */
+  { region: "岐阜・北陸", items: [
+    { label: "飛騨・高山", lat: 36.14, lng: 137.25 },
+    { label: "白川郷", lat: 36.26, lng: 136.906 },
+    { label: "郡上八幡", lat: 35.75, lng: 136.96 },
+    { label: "恵那・馬籠宿", lat: 35.52, lng: 137.57 },
+    { label: "能登半島・輪島", lat: 37.39, lng: 136.90 },
+    { label: "立山・黒部", lat: 36.57, lng: 137.66 },
+    { label: "東尋坊・永平寺", lat: 36.09, lng: 136.25 },
+    { label: "白山ホワイトロード", lat: 36.33, lng: 136.75 },
+  ]},
+  { region: "京都・奈良・和歌山", items: [
+    { label: "京都・美山かやぶきの里", lat: 35.29, lng: 135.66 },
+    { label: "天橋立", lat: 35.57, lng: 135.19 },
+    { label: "奈良・吉野", lat: 34.37, lng: 135.86 },
+    { label: "高野山", lat: 34.213, lng: 135.583 },
+    { label: "那智・熊野本宮", lat: 33.89, lng: 135.79 },
+  ]},
+  { region: "兵庫", items: [
+    { label: "淡路島", lat: 34.36, lng: 134.86 },
+    { label: "六甲・有馬", lat: 34.77, lng: 135.24 },
+    { label: "竹田城跡", lat: 35.30, lng: 134.83 },
+    { label: "城崎・但馬", lat: 35.62, lng: 134.81 },
+  ]},
+  { region: "関東", items: [
+    { label: "箱根", lat: 35.23, lng: 139.03 },
+    { label: "伊豆半島", lat: 34.87, lng: 138.94 },
+    { label: "秩父", lat: 35.99, lng: 139.08 },
+    { label: "奥多摩", lat: 35.81, lng: 139.10 },
+    { label: "日光・いろは坂", lat: 36.74, lng: 139.50 },
+    { label: "南房総", lat: 34.98, lng: 139.83 },
+    { label: "ヤビツ峠・丹沢", lat: 35.44, lng: 139.22 },
+  ]},
+  { region: "甲信越", items: [
+    { label: "富士・河口湖", lat: 35.517, lng: 138.75 },
+    { label: "美ヶ原・ビーナスライン", lat: 36.22, lng: 138.11 },
+    { label: "白馬・安曇野", lat: 36.65, lng: 137.86 },
+    { label: "志賀高原", lat: 36.70, lng: 138.52 },
+    { label: "佐渡", lat: 38.02, lng: 138.37 },
+  ]},
   { region: "北海道", items: [
     { label: "富良野・美瑛", lat: 43.35, lng: 142.47 },
     { label: "知床・ウトロ", lat: 44.07, lng: 145.10 },
@@ -452,43 +558,6 @@ const AREA_GROUPS = [
     { label: "男鹿半島", lat: 39.90, lng: 139.78 },
     { label: "三陸海岸・宮古", lat: 39.64, lng: 141.95 },
     { label: "鳥海山", lat: 39.10, lng: 140.05 },
-  ]},
-  { region: "関東", items: [
-    { label: "箱根", lat: 35.23, lng: 139.03 },
-    { label: "奥多摩", lat: 35.81, lng: 139.10 },
-    { label: "秩父", lat: 35.99, lng: 139.08 },
-    { label: "日光・いろは坂", lat: 36.74, lng: 139.50 },
-    { label: "南房総", lat: 34.98, lng: 139.83 },
-    { label: "伊豆半島", lat: 34.87, lng: 138.94 },
-    { label: "ヤビツ峠・丹沢", lat: 35.44, lng: 139.22 },
-  ]},
-  { region: "甲信越", items: [
-    { label: "富士・河口湖", lat: 35.517, lng: 138.75 },
-    { label: "美ヶ原・ビーナスライン", lat: 36.22, lng: 138.11 },
-    { label: "白馬・安曇野", lat: 36.65, lng: 137.86 },
-    { label: "志賀高原", lat: 36.70, lng: 138.52 },
-    { label: "佐渡", lat: 38.02, lng: 138.37 },
-  ]},
-  { region: "東海・北陸", items: [
-    { label: "飛騨・高山", lat: 36.14, lng: 137.25 },
-    { label: "白川郷", lat: 36.26, lng: 136.906 },
-    { label: "能登半島・輪島", lat: 37.39, lng: 136.90 },
-    { label: "伊勢志摩", lat: 34.43, lng: 136.79 },
-    { label: "浜名湖", lat: 34.75, lng: 137.58 },
-    { label: "郡上八幡", lat: 35.75, lng: 136.96 },
-    { label: "立山・黒部", lat: 36.57, lng: 137.66 },
-  ]},
-  { region: "関西", items: [
-    { label: "琵琶湖（東側）", lat: 35.20, lng: 136.16 },
-    { label: "琵琶湖（北・奥びわ湖）", lat: 35.45, lng: 136.13 },
-    { label: "伊吹山・奥伊吹", lat: 35.42, lng: 136.41 },
-    { label: "京都・美山", lat: 35.29, lng: 135.66 },
-    { label: "奈良・吉野", lat: 34.37, lng: 135.86 },
-    { label: "高野山", lat: 34.213, lng: 135.583 },
-    { label: "熊野・尾鷲", lat: 34.07, lng: 136.19 },
-    { label: "淡路島", lat: 34.36, lng: 134.86 },
-    { label: "六甲・有馬", lat: 34.77, lng: 135.24 },
-    { label: "天橋立", lat: 35.57, lng: 135.19 },
   ]},
   { region: "中国・四国", items: [
     { label: "しまなみ海道", lat: 34.25, lng: 133.20 },
@@ -655,22 +724,22 @@ function buildChips() {
   const awrap = $("areaChips");
   awrap.innerHTML = "";
   AREA_GROUPS.forEach((grp) => {
-    const box = document.createElement("div");
-    box.className = "area-group";
-    const h = document.createElement("p");
-    h.className = "area-region";
-    h.textContent = grp.region;
-    box.appendChild(h);
+    const d = document.createElement("details");
+    d.className = "area-group" + (grp.primary ? " primary" : "");
+    if (grp.open) d.open = true;
+    const s = document.createElement("summary");
+    s.innerHTML = `${escapeHtml(grp.region)}<span class="cnt">${grp.items.length}件</span>`;
+    d.appendChild(s);
     const chips = document.createElement("div");
     chips.className = "chips";
     grp.items.forEach((a) => {
       const label = document.createElement("label");
       label.className = "chip";
-      label.innerHTML = `<input type="radio" name="areaPreset" value="${a.lat},${a.lng}" data-label="${a.label}" /><span>${a.label}</span>`;
+      label.innerHTML = `<input type="radio" name="areaPreset" value="${a.lat},${a.lng}" data-label="${escapeHtml(a.label)}" /><span>${escapeHtml(a.label)}</span>`;
       chips.appendChild(label);
     });
-    box.appendChild(chips);
-    awrap.appendChild(box);
+    d.appendChild(chips);
+    awrap.appendChild(d);
   });
   awrap.addEventListener("change", () => { $("areaText").value = ""; });
 }
@@ -768,7 +837,7 @@ async function ensureMap() {
   if (state.map) return;
   const { Map } = await google.maps.importLibrary("maps");
   state.map = new Map($("map"), {
-    center: { lat: 35.0, lng: 136.5 }, zoom: 8, mapId: "DEMO_MAP_ID", clickableIcons: false,
+    center: { lat: 34.97, lng: 136.62 }, zoom: 9, mapId: "DEMO_MAP_ID", clickableIcons: false,
   });
 }
 function clearPlaceMarkers() {
