@@ -261,6 +261,74 @@
     .result-head h2 { font-size: 1.02rem; }
   }
   @media (max-width: 360px) { .controls { grid-template-columns: 1fr; } }
+
+  /* ===== v2: カーボンダーク / メタリックカード / 2カラム写真 / アニメーション ===== */
+  :root { --tex-base: transparent; --tex-image: none; --tex-pos: 0 0; --tex-size: auto; --glow: rgba(255,191,26,.13);
+          --card-grad: #ffffff; --card-bd: var(--line); --card-hi: 0 0 0 0 rgba(0,0,0,0); }
+  :root[data-theme="dark"] {
+    --glow: rgba(255,193,7,.09); --tex-base: #0d0e12;
+    --tex-image:
+      linear-gradient(27deg, #1a1a20 5px, transparent 5px),
+      linear-gradient(207deg, #1a1a20 5px, transparent 5px),
+      linear-gradient(27deg, #141419 5px, transparent 5px),
+      linear-gradient(207deg, #141419 5px, transparent 5px),
+      linear-gradient(90deg, #17171d 10px, transparent 10px),
+      linear-gradient(#161519 25%, #131317 25%, #131317 50%, transparent 50%, transparent 75%, #17171d 75%, #17171d);
+    --tex-pos: 0 5px, 10px 0, 0 10px, 10px 5px, 0 0, 0 0; --tex-size: 20px 20px;
+    --card-grad: linear-gradient(180deg, #1e222b 0%, #181b21 100%); --card-bd: #2c313d; --card-hi: inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme]) {
+    --glow: rgba(255,193,7,.09); --tex-base: #0d0e12;
+    --tex-image:
+      linear-gradient(27deg, #1a1a20 5px, transparent 5px),
+      linear-gradient(207deg, #1a1a20 5px, transparent 5px),
+      linear-gradient(27deg, #141419 5px, transparent 5px),
+      linear-gradient(207deg, #141419 5px, transparent 5px),
+      linear-gradient(90deg, #17171d 10px, transparent 10px),
+      linear-gradient(#161519 25%, #131317 25%, #131317 50%, transparent 50%, transparent 75%, #17171d 75%, #17171d);
+    --tex-pos: 0 5px, 10px 0, 0 10px, 10px 5px, 0 0, 0 0; --tex-size: 20px 20px;
+    --card-grad: linear-gradient(180deg, #1e222b 0%, #181b21 100%); --card-bd: #2c313d; --card-hi: inset 0 1px 0 rgba(255,255,255,.05);
+  } }
+
+  body::before { content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+    background-color: var(--tex-base); background-image: var(--tex-image);
+    background-position: var(--tex-pos); background-size: var(--tex-size); }
+  body::after { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background: radial-gradient(1100px 460px at 50% -160px, var(--glow), transparent 70%); }
+
+  .card { background: var(--card-grad); border: 1px solid var(--card-bd); box-shadow: var(--card-hi), var(--shadow); }
+
+  /* 結果：写真大きめ・2カラム */
+  .list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .place { display: block; padding: 0; overflow: hidden; background: var(--card-grad); border: 1px solid var(--card-bd);
+    box-shadow: var(--card-hi), var(--shadow); animation: cardIn .5s cubic-bezier(.2,.7,.2,1) both; }
+  .place:hover { transform: translateY(-3px); box-shadow: var(--card-hi), var(--shadow-hover); border-color: rgba(255,191,26,.55); }
+  .ph { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden;
+    background: linear-gradient(135deg, rgba(255,191,26,.20), rgba(255,158,0,.05)); }
+  .ph.clickable { cursor: pointer; }
+  .ph .ph-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
+  .ph.clickable:hover .ph-img { transform: scale(1.06); }
+  .ph.empty::after { content: "🍽️"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2.4rem; opacity: .5; }
+  .ph .photo-count { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.6); color: #fff; font-size: .72rem; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
+  .ph .num { position: absolute; top: 8px; left: 8px; width: 26px; height: 26px; border-radius: 50%;
+    background: linear-gradient(180deg, #ffce3a, #ffb300); color: #1c1f26; font-weight: 900; font-size: .8rem;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+  .ph .fav { position: absolute; top: 6px; right: 6px; width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(0,0,0,.42); backdrop-filter: blur(2px); color: #fff; font-size: 1.15rem;
+    display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+  .ph .fav.on { color: var(--star); }
+  .place .body { padding: 13px 14px 14px; }
+  .place .name { font-size: 1.04rem; }
+
+  @keyframes cardIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes popIn { from { opacity: 0; transform: scale(.94) translateY(8px); } to { opacity: 1; transform: none; } }
+  .modal.open .modal-inner { animation: popIn .26s cubic-bezier(.2,.8,.2,1) both; }
+  .reviews-box.open { animation: cardIn .25s ease both; }
+  @media (prefers-reduced-motion: reduce) {
+    .place, .modal.open .modal-inner, .reviews-box.open { animation: none !important; }
+    .place, .ph .ph-img, .fav, .btn { transition: none !important; }
+  }
+  @media (max-width: 600px) { .list { grid-template-columns: 1fr; } .ph { aspect-ratio: 16 / 9; } }
 </style>
 </head>
 <body>
@@ -1136,25 +1204,27 @@ function render(rows, total, fit = false) {
       arrBadge = `<span class="badge ${cls}">🕒 到着 ~${arr.timeStr}${txt ? " " + txt : ""}</span>`;
     }
 
-    let thumbHtml;
+    let phInner = "";
     if (r.photos.length) {
-      const url = r.photos[0].getURI({ maxWidth: 200, maxHeight: 200 });
-      thumbHtml = `<button class="thumb" data-photo="${i}" title="写真を見る"><img src="${url}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />` +
-        (r.photos.length > 1 ? `<span class="photo-count">📷 ${r.photos.length}</span>` : "") + `</button>`;
-    } else { thumbHtml = `<div class="thumb empty">🍽️</div>`; }
+      const url = r.photos[0].getURI({ maxWidth: 640, maxHeight: 420 });
+      phInner = `<img class="ph-img" src="${url}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />` +
+        (r.photos.length > 1 ? `<span class="photo-count">📷 ${r.photos.length}</span>` : "");
+    }
+    const phClass = "ph" + (r.photos.length ? " clickable" : " empty");
 
     const reviewToggle = r.reviewList.length ? `<button class="review-toggle" data-rev="${i}">💬 クチコミ ${r.reviewList.length}件 ▼</button>` : "";
     const routeLink = r.loc ? `<a href="${routeUrl(r.loc.lat(), r.loc.lng())}" target="_blank" rel="noopener">🛣 ルート</a>` : "";
     const saved = isFav(r.id);
 
+    el.style.animationDelay = Math.min(i * 45, 500) + "ms";
     el.innerHTML = `
-      <div class="num">${i + 1}</div>
-      ${thumbHtml}
+      <div class="${phClass}">
+        ${phInner}
+        <span class="num">${i + 1}</span>
+        <button class="fav ${saved ? "on" : ""}" title="行きたいリスト">${saved ? "★" : "☆"}</button>
+      </div>
       <div class="body">
-        <div class="name-row">
-          <p class="name">${escapeHtml(r.name)}</p>
-          <button class="fav ${saved ? "on" : ""}" title="行きたいリスト">${saved ? "★" : "☆"}</button>
-        </div>
+        <p class="name">${escapeHtml(r.name)}</p>
         <div class="meta">
           <span><span class="stars">${starString(r.rating)}</span> <span class="rating-num">${r.rating !== null ? r.rating.toFixed(1) : "—"}</span></span>
           <span class="reviews">レビュー ${r.reviews.toLocaleString()} 件</span>
@@ -1173,10 +1243,10 @@ function render(rows, total, fit = false) {
     listEl.appendChild(el);
 
     const favBtn = el.querySelector(".fav");
-    favBtn.addEventListener("click", () => { toggleFav(r); const on = isFav(r.id); favBtn.classList.toggle("on", on); favBtn.textContent = on ? "★" : "☆"; });
+    favBtn.addEventListener("click", (e) => { e.stopPropagation(); toggleFav(r); const on = isFav(r.id); favBtn.classList.toggle("on", on); favBtn.textContent = on ? "★" : "☆"; });
 
-    const thumbBtn = el.querySelector(".thumb[data-photo]");
-    if (thumbBtn) thumbBtn.addEventListener("click", () => openGallery(r));
+    const phEl = el.querySelector(".ph.clickable");
+    if (phEl) phEl.addEventListener("click", () => openGallery(r));
 
     const revBtn = el.querySelector(".review-toggle");
     if (revBtn) {
@@ -1189,9 +1259,9 @@ function render(rows, total, fit = false) {
     }
 
     if (r.loc && state.map) {
-      const pin = new PinElement({ background: "#ff5b4a", borderColor: "#fff", glyphColor: "#fff", glyph: String(i + 1) });
+      const pin = new PinElement({ background: "#ffb300", borderColor: "#fff", glyphColor: "#1c1f26", glyph: String(i + 1) });
       const marker = new AdvancedMarkerElement({ map: state.map, position: r.loc, title: r.name, content: pin.element });
-      marker.addListener("click", () => { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.animate([{ background: "rgba(255,91,74,.15)" }, { background: "transparent" }], { duration: 1200 }); });
+      marker.addListener("click", () => { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.animate([{ background: "rgba(255,191,26,.22)" }, { background: "transparent" }], { duration: 1200 }); });
       state.placeMarkers.push(marker);
       bounds.extend(r.loc);
     }

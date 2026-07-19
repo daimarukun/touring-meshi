@@ -1,5 +1,5 @@
 /* ツーリング飯さがし — Service Worker（アプリシェルのオフライン対応） */
-const CACHE = "touring-meshi-v4";
+const CACHE = "touring-meshi-v5";
 const SHELL = [
   "./",
   "./index.html",
