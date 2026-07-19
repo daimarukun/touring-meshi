@@ -99,8 +99,8 @@
   input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1px; border-color: var(--brand); }
 
   .mode-seg { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
-  .mode-seg label { flex: 1; }
-  .mode-seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .mode-seg label { flex: 1; position: relative; }
+  .mode-seg input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
   .mode-seg span {
     display: block; text-align: center; padding: 11px 8px; cursor: pointer; font-weight: 700;
     font-size: .92rem; background: var(--bg); color: var(--muted); user-select: none;
@@ -237,6 +237,32 @@
   .gallery img { width: 100%; border-radius: 10px; display: block; }
 
   .hidden { display: none !important; }
+
+  /* ===== モバイル最適化 ===== */
+  @media (max-width: 600px) {
+    .wrap { padding: 12px; }
+    header h1 { font-size: 1.2rem; }
+    header p { font-size: .85rem; }
+    .card { padding: 14px; border-radius: 12px; }
+    /* iOS Safari が入力フォーカス時に自動ズームするのを防ぐ（16px以上が必要） */
+    input, select { font-size: 16px; }
+    .mode-seg span { font-size: .82rem; padding: 12px 4px; }
+    .theme-seg span { padding: 8px 12px; }
+    .controls { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .actions { flex-direction: column; align-items: stretch; }
+    .actions .btn { width: 100%; padding: 13px 16px; }
+    #map { height: 260px; }
+    .place { padding: 12px; gap: 10px; }
+    .place .num { width: 22px; height: 22px; font-size: .72rem; }
+    .thumb { width: 76px; height: 76px; }
+    .place .name { font-size: .96rem; }
+    .place .meta { font-size: .82rem; gap: 5px 10px; }
+    .gallery { grid-template-columns: repeat(2, 1fr); }
+    .result-head h2 { font-size: 1rem; }
+  }
+  @media (max-width: 360px) {
+    .controls { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -408,7 +434,7 @@
 
     <div class="actions">
       <button class="btn" id="searchBtn">🗺️ このエリアで検索</button>
-      <button class="btn secondary" id="locBtn">📍 現在地を取得（走行距離の表示に使用）</button>
+      <button class="btn secondary" id="locBtn">📍 現在地を取得（走行距離用）</button>
     </div>
     <p class="status" id="status"></p>
   </div>
@@ -1035,7 +1061,7 @@ async function runSearch() {
 
   state.lastRows = rows;
   state.lastTotal = places.length;
-  applySortAndRender();
+  applySortAndRender(true);
 }
 
 /* =========================================================
@@ -1050,7 +1076,7 @@ function computeDistances(rows) {
     r.primaryLabel = r.distMe !== null ? "現在地から" : "エリア中心から";
   });
 }
-function applySortAndRender() {
+function applySortAndRender(fresh = false) {
   const minTrip = Number($("minTrip").value);
   const sortBy = $("sortByInline").value;
   let rows = [...state.lastRows];
@@ -1061,7 +1087,7 @@ function applySortAndRender() {
     if (sortBy === "reviews") return (b.reviews ?? 0) - (a.reviews ?? 0);
     return (a.primary ?? Infinity) - (b.primary ?? Infinity);
   });
-  render(rows, state.lastTotal);
+  render(rows, state.lastTotal, fresh);
 }
 $("sortBy").addEventListener("change", (e) => { $("sortByInline").value = e.target.value; if (state.lastRows.length) applySortAndRender(); });
 $("sortByInline").addEventListener("change", (e) => { $("sortBy").value = e.target.value; applySortAndRender(); });
@@ -1079,7 +1105,7 @@ function fmtDist(m) {
 }
 function priceStr(n) { return n === null ? "" : "¥".repeat(Math.max(1, n)); }
 
-function render(rows, total) {
+function render(rows, total, fit = false) {
   const listEl = $("list");
   listEl.innerHTML = "";
   $("resultsCard").style.display = "block";
@@ -1177,7 +1203,7 @@ function render(rows, total) {
     }
   });
 
-  if (state.map && !bounds.isEmpty()) state.map.fitBounds(bounds, 60);
+  if (fit && state.map && !bounds.isEmpty()) state.map.fitBounds(bounds, 60);
   const sortLabel = { distance: "距離順", rating: "評価順", reviews: "レビュー数順" }[$("sortByInline").value];
   setStatus(`「${state.centerLabel}」周辺で ${rows.length} 件を${sortLabel}に表示`);
 }
@@ -1209,7 +1235,8 @@ function openGallery(r) {
     const url = ph.getURI({ maxWidth: 800, maxHeight: 800 });
     return `<img src="${url}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />`;
   }).join("");
-  bumpUsage("photos", r.photos.length);
+  // 同じ店の写真は初回だけコストに計上（再表示はブラウザキャッシュのため）
+  if (!r._galleryCounted) { bumpUsage("photos", r.photos.length); r._galleryCounted = true; }
   $("modal").classList.add("open");
 }
 function closeGallery() { $("modal").classList.remove("open"); $("gallery").innerHTML = ""; }
