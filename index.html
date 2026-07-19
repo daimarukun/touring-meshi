@@ -4,36 +4,25 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ツーリング飯さがし — エリアで選んで星・レビュー・写真で絞り込み</title>
+<meta name="theme-color" content="#ff5b4a" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="ツーリング飯" />
 <style>
-  /* ライト（既定） */
   :root {
-    --bg: #f6f7f9;
-    --card: #ffffff;
-    --line: #e4e7ec;
-    --text: #1a1d24;
-    --muted: #667085;
-    --brand: #ff5b4a;
-    --brand-dark: #e6432f;
-    --star: #ffb400;
+    --bg: #f6f7f9; --card: #ffffff; --line: #e4e7ec; --text: #1a1d24; --muted: #667085;
+    --brand: #ff5b4a; --brand-dark: #e6432f; --star: #ffb400; --green: #12b76a;
     --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
   }
-  /* ダーク（明示指定） */
   :root[data-theme="dark"] {
-    --bg: #14171c;
-    --card: #1d2127;
-    --line: #2c313a;
-    --text: #f0f2f5;
-    --muted: #98a2b3;
+    --bg: #14171c; --card: #1d2127; --line: #2c313a; --text: #f0f2f5; --muted: #98a2b3;
     --shadow: 0 1px 3px rgba(0,0,0,.4);
   }
-  /* 自動（data-theme無し＝OSに追従） */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
-      --bg: #14171c;
-      --card: #1d2127;
-      --line: #2c313a;
-      --text: #f0f2f5;
-      --muted: #98a2b3;
+      --bg: #14171c; --card: #1d2127; --line: #2c313a; --text: #f0f2f5; --muted: #98a2b3;
       --shadow: 0 1px 3px rgba(0,0,0,.4);
     }
   }
@@ -41,49 +30,34 @@
   html, body { margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
+    background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
   .head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   header h1 { font-size: 1.4rem; margin: 8px 0 2px; }
   header p { color: var(--muted); margin: 0 0 16px; font-size: .9rem; }
 
-  .card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    box-shadow: var(--shadow);
-    padding: 16px;
-    margin-bottom: 16px;
-  }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 16px; margin-bottom: 16px; }
 
-  /* テーマ切替 */
   .theme-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
   .theme-seg label { position: relative; }
-  .theme-seg input { position: absolute; opacity: 0; pointer-events: none; }
-  .theme-seg span {
-    display: block; padding: 6px 11px; cursor: pointer; font-size: .82rem; font-weight: 700;
-    color: var(--muted); background: var(--card); user-select: none;
-  }
+  .theme-seg input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+  .theme-seg span { display: block; padding: 6px 11px; cursor: pointer; font-size: .82rem; font-weight: 700; color: var(--muted); background: var(--card); user-select: none; }
   .theme-seg input:checked + span { background: var(--brand); color: #fff; }
 
-  details.setup summary, details.usage summary {
-    cursor: pointer; font-weight: 600; list-style: none;
-    display: flex; align-items: center; gap: 8px;
+  details.setup summary, details.usage summary, details.favs summary {
+    cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px;
   }
-  details.setup summary::-webkit-details-marker, details.usage summary::-webkit-details-marker { display: none; }
+  details.setup summary::-webkit-details-marker, details.usage summary::-webkit-details-marker, details.favs summary::-webkit-details-marker { display: none; }
   details.setup summary::before { content: "⚙️"; }
   details.usage summary::before { content: "📊"; }
+  details.favs summary::before { content: "⭐"; }
   .setup-body { margin-top: 12px; }
   .setup-body ol { padding-left: 20px; margin: 8px 0; color: var(--muted); font-size: .85rem; }
   .setup-body a, .usage-body a { color: var(--brand); }
   .key-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .key-row input { flex: 1; min-width: 220px; }
 
-  /* 利用状況パネル */
   .usage-body { margin-top: 12px; font-size: .88rem; }
   .usage-nums { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 8px; }
   .usage-nums b { font-size: 1.05rem; }
@@ -98,13 +72,10 @@
   }
   input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1px; border-color: var(--brand); }
 
-  .mode-seg { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+  .mode-seg { display: flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
   .mode-seg label { flex: 1; position: relative; }
   .mode-seg input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
-  .mode-seg span {
-    display: block; text-align: center; padding: 11px 8px; cursor: pointer; font-weight: 700;
-    font-size: .92rem; background: var(--bg); color: var(--muted); user-select: none;
-  }
+  .mode-seg span { display: block; text-align: center; padding: 11px 8px; cursor: pointer; font-weight: 700; font-size: .92rem; background: var(--bg); color: var(--muted); user-select: none; }
   .mode-seg input:checked + span { background: var(--brand); color: #fff; }
 
   .block { margin-bottom: 14px; }
@@ -112,51 +83,37 @@
   .block-head .clear { font-size: .78rem; color: var(--brand); background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { position: relative; }
-  .chip input { position: absolute; opacity: 0; pointer-events: none; }
-  .chip span {
-    display: inline-block; padding: 7px 13px; border-radius: 999px;
-    border: 1px solid var(--line); background: var(--bg); color: var(--text);
-    font-size: .86rem; cursor: pointer; user-select: none; transition: all .12s;
-  }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+  .chip span { display: inline-block; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: .86rem; cursor: pointer; user-select: none; transition: all .12s; }
   .chip input:checked + span { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
   .chip span:hover { border-color: var(--brand); }
   .chip input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
   #areaChips .chip input:checked + span { background: #1a73e8; border-color: #1a73e8; }
 
-  /* エリアの地方グループ（アコーディオン） */
   details.area-group { margin-bottom: 8px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-  details.area-group > summary {
-    list-style: none; cursor: pointer; padding: 10px 12px; font-size: .84rem; font-weight: 700;
-    color: var(--text); background: var(--bg); display: flex; align-items: center; gap: 8px; user-select: none;
-  }
+  details.area-group > summary { list-style: none; cursor: pointer; padding: 10px 12px; font-size: .84rem; font-weight: 700; color: var(--text); background: var(--bg); display: flex; align-items: center; gap: 8px; user-select: none; }
   details.area-group > summary::-webkit-details-marker { display: none; }
-  details.area-group > summary::before {
-    content: "▶"; font-size: .68rem; color: var(--muted); transition: transform .15s;
-  }
+  details.area-group > summary::before { content: "▶"; font-size: .68rem; color: var(--muted); transition: transform .15s; }
   details.area-group[open] > summary::before { transform: rotate(90deg); }
   details.area-group.primary > summary { background: rgba(255,91,74,.10); color: var(--brand-dark); }
   details.area-group .cnt { margin-left: auto; color: var(--muted); font-weight: 600; font-size: .74rem; }
   details.area-group .chips { padding: 12px; }
 
   .or-text { text-align: center; color: var(--muted); font-size: .8rem; margin: 8px 0; }
+  .map-hint { font-size: .78rem; color: var(--muted); margin: -8px 2px 12px; }
 
   .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
   .checkbox { display: flex; align-items: center; gap: 8px; padding: 9px 0; font-size: .9rem; cursor: pointer; }
-  .checkbox input { width: auto; accent-color: var(--brand); width: 18px; height: 18px; }
+  .checkbox input { accent-color: var(--brand); width: 18px; height: 18px; }
 
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 11px 16px; border: none; border-radius: 10px;
-    background: var(--brand); color: #fff; font-weight: 700; font-size: .95rem;
-    cursor: pointer; font-family: inherit; transition: background .15s;
-  }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 16px; border: none; border-radius: 10px; background: var(--brand); color: #fff; font-weight: 700; font-size: .95rem; cursor: pointer; font-family: inherit; transition: background .15s; }
   .btn:hover { background: var(--brand-dark); }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
   .btn.secondary { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
   .btn.secondary:hover { background: rgba(255,91,74,.08); }
   .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
 
-  #map { width: 100%; height: 340px; border-radius: 14px; margin-bottom: 16px; background: var(--line); }
+  #map { width: 100%; height: 340px; border-radius: 14px; margin-bottom: 8px; background: var(--line); }
 
   .status { font-size: .9rem; color: var(--muted); margin: 4px 2px 12px; min-height: 1.2em; }
   .status.err { color: var(--brand-dark); font-weight: 600; }
@@ -168,49 +125,35 @@
   .sort-inline select { width: auto; padding: 6px 10px; }
 
   .list { display: grid; gap: 12px; }
-  .place {
-    display: flex; gap: 14px; align-items: flex-start;
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 14px; padding: 14px; box-shadow: var(--shadow);
-  }
-  .place .num {
-    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
-    background: var(--brand); color: #fff; font-weight: 700; font-size: .8rem;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .thumb {
-    flex: 0 0 auto; width: 96px; height: 96px; border-radius: 12px; object-fit: cover;
-    background: var(--line); cursor: pointer; position: relative; overflow: hidden;
-    border: none; padding: 0; display: block;
-  }
+  .place { display: flex; gap: 14px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+  .place .num { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; font-size: .8rem; display: flex; align-items: center; justify-content: center; }
+  .thumb { flex: 0 0 auto; width: 96px; height: 96px; border-radius: 12px; object-fit: cover; background: var(--line); cursor: pointer; position: relative; overflow: hidden; border: none; padding: 0; display: block; }
   .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .thumb .photo-count {
-    position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,.6); color: #fff;
-    font-size: .68rem; padding: 1px 6px; border-radius: 999px; font-weight: 700;
-  }
-  .thumb.empty {
-    display: flex; align-items: center; justify-content: center; cursor: default;
-    color: var(--muted); font-size: 1.6rem;
-  }
+  .thumb .photo-count { position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,.6); color: #fff; font-size: .68rem; padding: 1px 6px; border-radius: 999px; font-weight: 700; }
+  .thumb.empty { display: flex; align-items: center; justify-content: center; cursor: default; color: var(--muted); font-size: 1.6rem; }
   .place .body { flex: 1; min-width: 0; }
-  .place .name { font-weight: 700; font-size: 1rem; margin: 0 0 4px; }
+  .name-row { display: flex; align-items: flex-start; gap: 8px; }
+  .place .name { font-weight: 700; font-size: 1rem; margin: 0 0 4px; flex: 1; min-width: 0; }
+  .fav { flex: 0 0 auto; background: none; border: none; cursor: pointer; font-size: 1.35rem; line-height: 1; color: var(--muted); padding: 0; }
+  .fav.on { color: var(--star); }
   .place .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: .88rem; }
   .stars { color: var(--star); letter-spacing: 1px; }
   .rating-num { font-weight: 700; }
   .reviews { color: var(--muted); }
   .dist { font-weight: 700; color: var(--brand); }
   .dist-sub { color: var(--muted); font-size: .8rem; font-weight: 600; }
-  .price { color: #12b76a; font-weight: 700; }
+  .price { color: var(--green); font-weight: 700; }
   .badge { font-size: .72rem; padding: 2px 8px; border-radius: 999px; font-weight: 700; }
-  .badge.open { background: rgba(18,183,106,.14); color: #12b76a; }
+  .badge.open { background: rgba(18,183,106,.14); color: var(--green); }
   .badge.closed { background: rgba(240,68,56,.14); color: #f04438; }
   .badge.chain { background: rgba(102,112,133,.16); color: var(--muted); }
+  .badge.park { background: rgba(26,115,232,.14); color: #1a73e8; }
+  .badge.arr-open { background: rgba(18,183,106,.14); color: var(--green); }
+  .badge.arr-closed { background: rgba(240,68,56,.14); color: #f04438; }
+  .badge.arr-unknown { background: rgba(102,112,133,.14); color: var(--muted); }
   .place .addr { color: var(--muted); font-size: .82rem; margin: 6px 0 0; }
   .place .links { margin-top: 8px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
-  .place .links a, .review-toggle {
-    color: var(--brand); font-size: .85rem; text-decoration: none; font-weight: 600;
-    background: none; border: none; cursor: pointer; padding: 0; font-family: inherit;
-  }
+  .place .links a, .review-toggle { color: var(--brand); font-size: .85rem; text-decoration: none; font-weight: 600; background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
   .place .links a:hover, .review-toggle:hover { text-decoration: underline; }
 
   .reviews-box { margin-top: 10px; display: none; }
@@ -224,11 +167,20 @@
   .review .rtime { color: var(--muted); font-size: .76rem; }
   .review .rtext { font-size: .85rem; color: var(--text); margin: 2px 0 0; white-space: pre-wrap; }
 
+  /* お気に入りリスト */
+  .fav-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .fav-item:first-child { border-top: none; }
+  .fav-item .fi-body { flex: 1; min-width: 0; }
+  .fav-item .fi-name { font-weight: 700; font-size: .92rem; }
+  .fav-item .fi-meta { font-size: .8rem; color: var(--muted); }
+  .fav-item .fi-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .fav-item a, .fav-item button { color: var(--brand); font-size: .82rem; font-weight: 600; text-decoration: none; background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
+  .fav-empty { color: var(--muted); font-size: .85rem; padding: 6px 0; }
+
   .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
   .hint { font-size: .78rem; color: var(--muted); margin-top: 4px; }
 
-  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; z-index: 50;
-           align-items: center; justify-content: center; padding: 16px; }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; z-index: 50; align-items: center; justify-content: center; padding: 16px; }
   .modal.open { display: flex; }
   .modal-inner { max-width: 900px; width: 100%; max-height: 90vh; overflow: auto; }
   .modal-title { color: #fff; font-weight: 700; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; }
@@ -236,15 +188,16 @@
   .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
   .gallery img { width: 100%; border-radius: 10px; display: block; }
 
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #1a1d24; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: .88rem; font-weight: 700; z-index: 60; opacity: 0; transition: opacity .2s; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+  .toast.show { opacity: 1; }
+
   .hidden { display: none !important; }
 
-  /* ===== モバイル最適化 ===== */
   @media (max-width: 600px) {
     .wrap { padding: 12px; }
     header h1 { font-size: 1.2rem; }
     header p { font-size: .85rem; }
     .card { padding: 14px; border-radius: 12px; }
-    /* iOS Safari が入力フォーカス時に自動ズームするのを防ぐ（16px以上が必要） */
     input, select { font-size: 16px; }
     .mode-seg span { font-size: .82rem; padding: 12px 4px; }
     .theme-seg span { padding: 8px 12px; }
@@ -260,9 +213,7 @@
     .gallery { grid-template-columns: repeat(2, 1fr); }
     .result-head h2 { font-size: 1rem; }
   }
-  @media (max-width: 360px) {
-    .controls { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 360px) { .controls { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -276,10 +227,9 @@
         <label><input type="radio" name="theme" value="auto" /><span>自動</span></label>
       </div>
     </div>
-    <p>目的エリアを選んで、その周辺（最大50km）のお店を星・レビュー・写真で絞り込み。現在地からの走行距離も表示できます。</p>
+    <p>目的エリアを選んで、その周辺（最大50km）のお店・スポットを絞り込み。写真・クチコミ・走行距離・ルート案内も。</p>
   </header>
 
-  <!-- APIキー設定 -->
   <div class="card">
     <details class="setup" id="setupBox">
       <summary>Google Maps APIキーの設定</summary>
@@ -302,7 +252,6 @@
     </details>
   </div>
 
-  <!-- 利用状況（概算） -->
   <div class="card">
     <details class="usage" id="usageBox">
       <summary>今月のAPI利用（概算）<span id="usageSummary" style="color:var(--muted);font-weight:400;font-size:.85rem;margin-left:6px"></span></summary>
@@ -325,6 +274,14 @@
     </details>
   </div>
 
+  <!-- お気に入り / 行きたいリスト -->
+  <div class="card">
+    <details class="favs" id="favsBox">
+      <summary>行きたいリスト<span id="favCount" style="color:var(--muted);font-weight:400;font-size:.85rem;margin-left:6px"></span></summary>
+      <div id="favList" style="margin-top:10px"></div>
+    </details>
+  </div>
+
   <!-- 検索条件 -->
   <div class="card">
     <div class="mode-seg">
@@ -340,14 +297,14 @@
         </div>
         <div id="areaChips"></div>
       </div>
-      <div class="or-text">— または —</div>
+      <div class="or-text">— または 地図タップ / 地域名入力 —</div>
       <div class="block">
         <label class="field" for="areaText">地域名で指定（例：琵琶湖 東側、伊勢志摩、美ヶ原）</label>
         <input type="text" id="areaText" placeholder="行きたい地域・スポット名を入力" />
       </div>
     </div>
 
-    <div class="block">
+    <div class="block" id="genreBlock">
       <div class="block-head">
         <label class="field" style="margin:0">ジャンル（複数選択できます）</label>
         <button type="button" class="clear" id="clearGenres">クリア</button>
@@ -356,6 +313,17 @@
     </div>
 
     <div class="controls">
+      <div>
+        <label class="field" for="target">探すもの</label>
+        <select id="target">
+          <option value="food" selected>飲食店（ジャンルで指定）</option>
+          <option value="michi">道の駅</option>
+          <option value="sapa">高速 SA・PA</option>
+          <option value="view">絶景・展望スポット</option>
+          <option value="onsen">日帰り温泉</option>
+          <option value="gas">ガソリンスタンド</option>
+        </select>
+      </div>
       <div>
         <label class="field" for="keyword">キーワード（任意）</label>
         <input type="text" id="keyword" placeholder="例: 名物、ライダー歓迎" />
@@ -426,20 +394,26 @@
           <option value="reviews">レビューが多い順</option>
         </select>
       </div>
-      <div>
+      <div id="chainWrap">
         <label class="field">チェーン店</label>
         <label class="checkbox"><input type="checkbox" id="excludeChains" /><span>チェーン店を除く</span></label>
+      </div>
+      <div>
+        <label class="field">駐車場</label>
+        <label class="checkbox"><input type="checkbox" id="preferParking" /><span>駐車場ありを優先</span></label>
       </div>
     </div>
 
     <div class="actions">
       <button class="btn" id="searchBtn">🗺️ このエリアで検索</button>
       <button class="btn secondary" id="locBtn">📍 現在地を取得（走行距離用）</button>
+      <button class="btn secondary" id="shareBtn">🔗 条件をURLでコピー</button>
     </div>
     <p class="status" id="status"></p>
   </div>
 
   <div id="map"></div>
+  <p class="map-hint">💡 地図をタップすると、その地点を検索の中心にできます（プリセットに無い場所もOK）。</p>
 
   <div class="card" id="resultsCard" style="display:none">
     <div class="result-head">
@@ -469,213 +443,148 @@
     <div class="gallery" id="gallery"></div>
   </div>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
 /* =========================================================
-   人気ツーリングエリア（地方グループ・座標つき）
+   データ定義
 ========================================================= */
 const AREA_GROUPS = [
-  /* === 拠点（四日市）周辺：分厚く。最初から開いておく === */
   { region: "三重県（四日市ふきん〜県内）", primary: true, open: true, items: [
-    { label: "四日市（中心）", lat: 34.965, lng: 136.624 },
-    { label: "湯の山温泉・御在所", lat: 35.02, lng: 136.42 },
-    { label: "菰野・鈴鹿スカイライン", lat: 35.01, lng: 136.44 },
-    { label: "桑名・長島", lat: 35.06, lng: 136.68 },
-    { label: "なばなの里", lat: 35.06, lng: 136.73 },
-    { label: "いなべ・藤原岳", lat: 35.12, lng: 136.55 },
-    { label: "鈴鹿サーキット", lat: 34.85, lng: 136.54 },
-    { label: "鈴鹿峠", lat: 34.92, lng: 136.32 },
-    { label: "亀山・関宿", lat: 34.86, lng: 136.42 },
-    { label: "津・美杉", lat: 34.53, lng: 136.25 },
-    { label: "青山高原", lat: 34.65, lng: 136.28 },
-    { label: "松阪", lat: 34.58, lng: 136.53 },
-    { label: "伊勢神宮", lat: 34.46, lng: 136.72 },
-    { label: "鳥羽", lat: 34.48, lng: 136.84 },
-    { label: "志摩・大王崎", lat: 34.28, lng: 136.90 },
-    { label: "名張・赤目四十八滝", lat: 34.62, lng: 136.10 },
-    { label: "伊賀上野", lat: 34.77, lng: 136.13 },
-    { label: "尾鷲・紀北", lat: 34.07, lng: 136.19 },
+    { label: "四日市（中心）", lat: 34.965, lng: 136.624 }, { label: "湯の山温泉・御在所", lat: 35.02, lng: 136.42 },
+    { label: "菰野・鈴鹿スカイライン", lat: 35.01, lng: 136.44 }, { label: "桑名・長島", lat: 35.06, lng: 136.68 },
+    { label: "なばなの里", lat: 35.06, lng: 136.73 }, { label: "いなべ・藤原岳", lat: 35.12, lng: 136.55 },
+    { label: "鈴鹿サーキット", lat: 34.85, lng: 136.54 }, { label: "鈴鹿峠", lat: 34.92, lng: 136.32 },
+    { label: "亀山・関宿", lat: 34.86, lng: 136.42 }, { label: "津・美杉", lat: 34.53, lng: 136.25 },
+    { label: "青山高原", lat: 34.65, lng: 136.28 }, { label: "松阪", lat: 34.58, lng: 136.53 },
+    { label: "伊勢神宮", lat: 34.46, lng: 136.72 }, { label: "鳥羽", lat: 34.48, lng: 136.84 },
+    { label: "志摩・大王崎", lat: 34.28, lng: 136.90 }, { label: "名張・赤目四十八滝", lat: 34.62, lng: 136.10 },
+    { label: "伊賀上野", lat: 34.77, lng: 136.13 }, { label: "尾鷲・紀北", lat: 34.07, lng: 136.19 },
     { label: "熊野・鬼ヶ城", lat: 33.89, lng: 136.13 },
   ]},
   { region: "愛知県", primary: true, open: true, items: [
-    { label: "名古屋", lat: 35.17, lng: 136.88 },
-    { label: "犬山", lat: 35.38, lng: 136.94 },
-    { label: "瀬戸・猿投", lat: 35.22, lng: 137.08 },
-    { label: "豊田・足助（香嵐渓）", lat: 35.16, lng: 137.42 },
-    { label: "稲武・どんぐりの湯", lat: 35.22, lng: 137.50 },
-    { label: "設楽・段戸高原", lat: 35.14, lng: 137.56 },
-    { label: "茶臼山高原", lat: 35.20, lng: 137.63 },
-    { label: "新城・鳳来寺山", lat: 34.95, lng: 137.55 },
-    { label: "岡崎", lat: 34.95, lng: 137.17 },
-    { label: "蒲郡・三河湾", lat: 34.80, lng: 137.22 },
-    { label: "渥美半島・伊良湖岬", lat: 34.58, lng: 137.10 },
-    { label: "南知多・師崎", lat: 34.70, lng: 136.89 },
-    { label: "常滑・セントレア", lat: 34.88, lng: 136.83 },
-    { label: "一宮・木曽川", lat: 35.30, lng: 136.80 },
+    { label: "名古屋", lat: 35.17, lng: 136.88 }, { label: "犬山", lat: 35.38, lng: 136.94 },
+    { label: "瀬戸・猿投", lat: 35.22, lng: 137.08 }, { label: "豊田・足助（香嵐渓）", lat: 35.16, lng: 137.42 },
+    { label: "稲武・どんぐりの湯", lat: 35.22, lng: 137.50 }, { label: "設楽・段戸高原", lat: 35.14, lng: 137.56 },
+    { label: "茶臼山高原", lat: 35.20, lng: 137.63 }, { label: "新城・鳳来寺山", lat: 34.95, lng: 137.55 },
+    { label: "岡崎", lat: 34.95, lng: 137.17 }, { label: "蒲郡・三河湾", lat: 34.80, lng: 137.22 },
+    { label: "渥美半島・伊良湖岬", lat: 34.58, lng: 137.10 }, { label: "南知多・師崎", lat: 34.70, lng: 136.89 },
+    { label: "常滑・セントレア", lat: 34.88, lng: 136.83 }, { label: "一宮・木曽川", lat: 35.30, lng: 136.80 },
   ]},
   { region: "滋賀県（琵琶湖）", primary: true, open: true, items: [
-    { label: "大津・比叡山", lat: 35.07, lng: 135.86 },
-    { label: "琵琶湖大橋・堅田", lat: 35.12, lng: 135.93 },
-    { label: "草津・守山", lat: 35.02, lng: 135.96 },
-    { label: "近江八幡", lat: 35.13, lng: 136.10 },
-    { label: "彦根", lat: 35.27, lng: 136.26 },
-    { label: "多賀大社", lat: 35.22, lng: 136.29 },
-    { label: "米原・伊吹山", lat: 35.35, lng: 136.33 },
-    { label: "長浜", lat: 35.38, lng: 136.27 },
-    { label: "余呉湖", lat: 35.50, lng: 136.19 },
-    { label: "奥琵琶湖・海津大崎", lat: 35.46, lng: 136.11 },
-    { label: "マキノ・メタセコイア並木", lat: 35.47, lng: 136.03 },
-    { label: "高島・白鬚神社", lat: 35.28, lng: 136.00 },
-    { label: "比良山系", lat: 35.22, lng: 135.91 },
-    { label: "甲賀・信楽", lat: 34.90, lng: 136.06 },
+    { label: "大津・比叡山", lat: 35.07, lng: 135.86 }, { label: "琵琶湖大橋・堅田", lat: 35.12, lng: 135.93 },
+    { label: "草津・守山", lat: 35.02, lng: 135.96 }, { label: "近江八幡", lat: 35.13, lng: 136.10 },
+    { label: "彦根", lat: 35.27, lng: 136.26 }, { label: "多賀大社", lat: 35.22, lng: 136.29 },
+    { label: "米原・伊吹山", lat: 35.35, lng: 136.33 }, { label: "長浜", lat: 35.38, lng: 136.27 },
+    { label: "余呉湖", lat: 35.50, lng: 136.19 }, { label: "奥琵琶湖・海津大崎", lat: 35.46, lng: 136.11 },
+    { label: "マキノ・メタセコイア並木", lat: 35.47, lng: 136.03 }, { label: "高島・白鬚神社", lat: 35.28, lng: 136.00 },
+    { label: "比良山系", lat: 35.22, lng: 135.91 }, { label: "甲賀・信楽", lat: 34.90, lng: 136.06 },
   ]},
-
-  /* === その他の地方：たたんでおく（タップで中身を表示） === */
   { region: "岐阜・北陸", items: [
-    { label: "飛騨・高山", lat: 36.14, lng: 137.25 },
-    { label: "白川郷", lat: 36.26, lng: 136.906 },
-    { label: "郡上八幡", lat: 35.75, lng: 136.96 },
-    { label: "恵那・馬籠宿", lat: 35.52, lng: 137.57 },
-    { label: "能登半島・輪島", lat: 37.39, lng: 136.90 },
-    { label: "立山・黒部", lat: 36.57, lng: 137.66 },
-    { label: "東尋坊・永平寺", lat: 36.09, lng: 136.25 },
-    { label: "白山ホワイトロード", lat: 36.33, lng: 136.75 },
+    { label: "飛騨・高山", lat: 36.14, lng: 137.25 }, { label: "白川郷", lat: 36.26, lng: 136.906 },
+    { label: "郡上八幡", lat: 35.75, lng: 136.96 }, { label: "恵那・馬籠宿", lat: 35.52, lng: 137.57 },
+    { label: "能登半島・輪島", lat: 37.39, lng: 136.90 }, { label: "立山・黒部", lat: 36.57, lng: 137.66 },
+    { label: "東尋坊・永平寺", lat: 36.09, lng: 136.25 }, { label: "白山ホワイトロード", lat: 36.33, lng: 136.75 },
   ]},
   { region: "京都・奈良・和歌山", items: [
-    { label: "京都・美山かやぶきの里", lat: 35.29, lng: 135.66 },
-    { label: "天橋立", lat: 35.57, lng: 135.19 },
-    { label: "奈良・吉野", lat: 34.37, lng: 135.86 },
-    { label: "高野山", lat: 34.213, lng: 135.583 },
+    { label: "京都・美山かやぶきの里", lat: 35.29, lng: 135.66 }, { label: "天橋立", lat: 35.57, lng: 135.19 },
+    { label: "奈良・吉野", lat: 34.37, lng: 135.86 }, { label: "高野山", lat: 34.213, lng: 135.583 },
     { label: "那智・熊野本宮", lat: 33.89, lng: 135.79 },
   ]},
   { region: "兵庫", items: [
-    { label: "淡路島", lat: 34.36, lng: 134.86 },
-    { label: "六甲・有馬", lat: 34.77, lng: 135.24 },
-    { label: "竹田城跡", lat: 35.30, lng: 134.83 },
-    { label: "城崎・但馬", lat: 35.62, lng: 134.81 },
+    { label: "淡路島", lat: 34.36, lng: 134.86 }, { label: "六甲・有馬", lat: 34.77, lng: 135.24 },
+    { label: "竹田城跡", lat: 35.30, lng: 134.83 }, { label: "城崎・但馬", lat: 35.62, lng: 134.81 },
   ]},
   { region: "関東", items: [
-    { label: "箱根", lat: 35.23, lng: 139.03 },
-    { label: "伊豆半島", lat: 34.87, lng: 138.94 },
-    { label: "秩父", lat: 35.99, lng: 139.08 },
-    { label: "奥多摩", lat: 35.81, lng: 139.10 },
-    { label: "日光・いろは坂", lat: 36.74, lng: 139.50 },
-    { label: "南房総", lat: 34.98, lng: 139.83 },
+    { label: "箱根", lat: 35.23, lng: 139.03 }, { label: "伊豆半島", lat: 34.87, lng: 138.94 },
+    { label: "秩父", lat: 35.99, lng: 139.08 }, { label: "奥多摩", lat: 35.81, lng: 139.10 },
+    { label: "日光・いろは坂", lat: 36.74, lng: 139.50 }, { label: "南房総", lat: 34.98, lng: 139.83 },
     { label: "ヤビツ峠・丹沢", lat: 35.44, lng: 139.22 },
   ]},
   { region: "甲信越", items: [
-    { label: "富士・河口湖", lat: 35.517, lng: 138.75 },
-    { label: "美ヶ原・ビーナスライン", lat: 36.22, lng: 138.11 },
-    { label: "白馬・安曇野", lat: 36.65, lng: 137.86 },
-    { label: "志賀高原", lat: 36.70, lng: 138.52 },
+    { label: "富士・河口湖", lat: 35.517, lng: 138.75 }, { label: "美ヶ原・ビーナスライン", lat: 36.22, lng: 138.11 },
+    { label: "白馬・安曇野", lat: 36.65, lng: 137.86 }, { label: "志賀高原", lat: 36.70, lng: 138.52 },
     { label: "佐渡", lat: 38.02, lng: 138.37 },
   ]},
   { region: "北海道", items: [
-    { label: "富良野・美瑛", lat: 43.35, lng: 142.47 },
-    { label: "知床・ウトロ", lat: 44.07, lng: 145.10 },
-    { label: "洞爺・支笏湖", lat: 42.60, lng: 140.85 },
-    { label: "宗谷岬・稚内", lat: 45.52, lng: 141.94 },
+    { label: "富良野・美瑛", lat: 43.35, lng: 142.47 }, { label: "知床・ウトロ", lat: 44.07, lng: 145.10 },
+    { label: "洞爺・支笏湖", lat: 42.60, lng: 140.85 }, { label: "宗谷岬・稚内", lat: 45.52, lng: 141.94 },
     { label: "襟裳岬", lat: 41.92, lng: 143.24 },
   ]},
   { region: "東北", items: [
-    { label: "八幡平・十和田", lat: 39.96, lng: 140.85 },
-    { label: "蔵王", lat: 38.14, lng: 140.44 },
-    { label: "裏磐梯・磐梯山", lat: 37.68, lng: 140.07 },
-    { label: "男鹿半島", lat: 39.90, lng: 139.78 },
-    { label: "三陸海岸・宮古", lat: 39.64, lng: 141.95 },
-    { label: "鳥海山", lat: 39.10, lng: 140.05 },
+    { label: "八幡平・十和田", lat: 39.96, lng: 140.85 }, { label: "蔵王", lat: 38.14, lng: 140.44 },
+    { label: "裏磐梯・磐梯山", lat: 37.68, lng: 140.07 }, { label: "男鹿半島", lat: 39.90, lng: 139.78 },
+    { label: "三陸海岸・宮古", lat: 39.64, lng: 141.95 }, { label: "鳥海山", lat: 39.10, lng: 140.05 },
   ]},
   { region: "中国・四国", items: [
-    { label: "しまなみ海道", lat: 34.25, lng: 133.20 },
-    { label: "蒜山高原", lat: 35.32, lng: 133.62 },
-    { label: "鳥取砂丘", lat: 35.54, lng: 134.23 },
-    { label: "四国カルスト", lat: 33.55, lng: 132.92 },
-    { label: "室戸岬", lat: 33.25, lng: 134.18 },
-    { label: "足摺岬", lat: 32.72, lng: 133.02 },
+    { label: "しまなみ海道", lat: 34.25, lng: 133.20 }, { label: "蒜山高原", lat: 35.32, lng: 133.62 },
+    { label: "鳥取砂丘", lat: 35.54, lng: 134.23 }, { label: "四国カルスト", lat: 33.55, lng: 132.92 },
+    { label: "室戸岬", lat: 33.25, lng: 134.18 }, { label: "足摺岬", lat: 32.72, lng: 133.02 },
     { label: "剣山・見ノ越", lat: 33.86, lng: 134.09 },
   ]},
   { region: "九州", items: [
-    { label: "阿蘇", lat: 32.88, lng: 131.10 },
-    { label: "やまなみハイウェイ", lat: 33.09, lng: 131.24 },
-    { label: "別府・湯布院", lat: 33.26, lng: 131.36 },
-    { label: "高千穂", lat: 32.71, lng: 131.31 },
-    { label: "桜島", lat: 31.59, lng: 130.66 },
-    { label: "佐多岬", lat: 31.00, lng: 130.66 },
+    { label: "阿蘇", lat: 32.88, lng: 131.10 }, { label: "やまなみハイウェイ", lat: 33.09, lng: 131.24 },
+    { label: "別府・湯布院", lat: 33.26, lng: 131.36 }, { label: "高千穂", lat: 32.71, lng: 131.31 },
+    { label: "桜島", lat: 31.59, lng: 130.66 }, { label: "佐多岬", lat: 31.00, lng: 130.66 },
     { label: "五島・福江", lat: 32.70, lng: 128.84 },
   ]},
 ];
 
 const GENRES = [
-  { label: "食堂・レストラン", type: "restaurant" },
-  { label: "和食・定食",       type: "japanese_restaurant" },
-  { label: "ラーメン",         type: "ramen_restaurant" },
-  { label: "寿司",             type: "sushi_restaurant" },
-  { label: "焼肉・BBQ",        type: "barbecue_restaurant" },
-  { label: "海鮮",             type: "seafood_restaurant" },
-  { label: "ステーキ",         type: "steak_house" },
-  { label: "中華",             type: "chinese_restaurant" },
-  { label: "韓国料理",         type: "korean_restaurant" },
-  { label: "イタリアン",       type: "italian_restaurant" },
-  { label: "カレー・インド",   type: "indian_restaurant" },
-  { label: "カフェ",           type: "cafe" },
-  { label: "居酒屋・バー",     type: "bar" },
-  { label: "ファストフード",   type: "fast_food_restaurant" },
-  { label: "ハンバーガー",     type: "hamburger_restaurant" },
-  { label: "ピザ",             type: "pizza_restaurant" },
-  { label: "ベーカリー",       type: "bakery" },
-  { label: "スイーツ",         type: "dessert_restaurant" },
+  { label: "食堂・レストラン", type: "restaurant" }, { label: "和食・定食", type: "japanese_restaurant" },
+  { label: "ラーメン", type: "ramen_restaurant" }, { label: "寿司", type: "sushi_restaurant" },
+  { label: "焼肉・BBQ", type: "barbecue_restaurant" }, { label: "海鮮", type: "seafood_restaurant" },
+  { label: "ステーキ", type: "steak_house" }, { label: "中華", type: "chinese_restaurant" },
+  { label: "韓国料理", type: "korean_restaurant" }, { label: "イタリアン", type: "italian_restaurant" },
+  { label: "カレー・インド", type: "indian_restaurant" }, { label: "カフェ", type: "cafe" },
+  { label: "居酒屋・バー", type: "bar" }, { label: "ファストフード", type: "fast_food_restaurant" },
+  { label: "ハンバーガー", type: "hamburger_restaurant" }, { label: "ピザ", type: "pizza_restaurant" },
+  { label: "ベーカリー", type: "bakery" }, { label: "スイーツ", type: "dessert_restaurant" },
 ];
 
-/* チェーン店の判定キーワード（店名に含まれば除外／バッジ表示） */
+/* 探すもの（飲食店以外のツーリングスポット） */
+const TARGETS = {
+  food:  { food: true },
+  michi: { q: "道の駅" },
+  sapa:  { q: "サービスエリア パーキングエリア" },
+  view:  { q: "展望台 絶景スポット", type: "tourist_attraction" },
+  onsen: { q: "日帰り温泉" },
+  gas:   { type: "gas_station" },
+};
+
 const CHAIN_KEYWORDS = [
   "マクドナルド","McDonald","スターバックス","Starbucks","ドトール","タリーズ","Tully","コメダ",
   "サイゼリヤ","ガスト","バーミヤン","ジョナサン","デニーズ","ロイヤルホスト","ココス","COCO'S","ジョイフル","びっくりドンキー",
-  "吉野家","すき家","松屋","なか卯","てんや",
-  "ケンタッキー","KFC","モスバーガー","MOS","ロッテリア","バーガーキング","フレッシュネス","ファーストキッチン","サブウェイ","Subway",
+  "吉野家","すき家","松屋","なか卯","てんや","ケンタッキー","KFC","モスバーガー","MOS","ロッテリア","バーガーキング","フレッシュネス","ファーストキッチン","サブウェイ","Subway",
   "丸亀製麺","はなまるうどん","リンガーハット","餃子の王将","大阪王将","日高屋","幸楽苑","一蘭","一風堂","天下一品","満洲",
-  "CoCo壱番屋","ココ壱","かつや","松のや","やよい軒","大戸屋",
-  "スシロー","くら寿司","はま寿司","かっぱ寿司","銚子丸",
+  "CoCo壱番屋","ココ壱","かつや","松のや","やよい軒","大戸屋","スシロー","くら寿司","はま寿司","かっぱ寿司","銚子丸",
   "鳥貴族","ワタミ","和民","白木屋","魚民","甘太郎","串カツ田中","焼肉きんぐ","牛角","安楽亭","いきなり!ステーキ","いきなりステーキ","ペッパーランチ",
   "ミスタードーナツ","ミスド","ドミノ","ピザハット","ピザーラ","ジョリーパスタ","五右衛門","ステーキガスト","夢庵","天丼",
 ];
 
-const PRICE_MAP = {
-  PRICE_LEVEL_FREE: 0, PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2,
-  PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4,
-};
-
-/* コスト概算レート（あくまで目安・2026年時点） */
+const PRICE_MAP = { PRICE_LEVEL_FREE: 0, PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2, PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4 };
 const RATE = { searchUSD: 0.035, photoUSD: 0.007, freeSearch: 1000, freePhoto: 5000, jpyPerUsd: 155 };
+const AVG_SPEED_KMH = 40; // 到着時刻の見積り（一般道の目安）
 
 /* =========================================================
    状態
 ========================================================= */
 const state = {
   apiKey: localStorage.getItem("gmaps_api_key") || "",
-  mapsLoaded: false,
-  userLoc: null,
-  searchCenter: null,
-  centerLabel: "",
-  map: null,
-  userMarker: null,
-  centerMarker: null,
-  placeMarkers: [],
-  libs: {},
-  lastRows: [],
-  lastTotal: 0,
+  mapsLoaded: false, userLoc: null, searchCenter: null, centerLabel: "",
+  map: null, userMarker: null, centerMarker: null, pickMarker: null, placeMarkers: [],
+  libs: {}, lastRows: [], lastTotal: 0, mapPicked: null, pendingPick: null,
 };
 
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
-function setStatus(msg, isErr = false) {
-  statusEl.textContent = msg;
-  statusEl.classList.toggle("err", isErr);
-}
+function setStatus(msg, isErr = false) { statusEl.textContent = msg; statusEl.classList.toggle("err", isErr); }
 function getMode() { return document.querySelector('input[name="mode"]:checked').value; }
 function isChain(name) { const n = name || ""; return CHAIN_KEYWORDS.some((k) => n.includes(k)); }
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 1900); }
 
 /* =========================================================
-   テーマ切替
+   テーマ
 ========================================================= */
 function applyTheme(t) {
   if (t === "auto") document.documentElement.removeAttribute("data-theme");
@@ -687,17 +596,13 @@ function initTheme() {
   const radio = document.querySelector(`input[name="theme"][value="${t}"]`);
   if (radio) radio.checked = true;
   applyTheme(t);
-  document.querySelectorAll('input[name="theme"]').forEach((r) =>
-    r.addEventListener("change", (e) => applyTheme(e.target.value)));
+  document.querySelectorAll('input[name="theme"]').forEach((r) => r.addEventListener("change", (e) => applyTheme(e.target.value)));
 }
 
 /* =========================================================
    利用状況カウンタ
 ========================================================= */
-function curMonth() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
+function curMonth() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; }
 function loadUsage() {
   let all = {};
   try { all = JSON.parse(localStorage.getItem("usage_v1") || "{}"); } catch (e) {}
@@ -717,9 +622,7 @@ function updateUsagePanel() {
   const u = all[m];
   $("uSearches").textContent = u.searches.toLocaleString();
   $("uPhotos").textContent = u.photos.toLocaleString();
-  const billSearch = Math.max(0, u.searches - RATE.freeSearch) * RATE.searchUSD;
-  const billPhoto = Math.max(0, u.photos - RATE.freePhoto) * RATE.photoUSD;
-  const usd = billSearch + billPhoto;
+  const usd = Math.max(0, u.searches - RATE.freeSearch) * RATE.searchUSD + Math.max(0, u.photos - RATE.freePhoto) * RATE.photoUSD;
   const jpy = Math.round(usd * RATE.jpyPerUsd);
   const inFree = u.searches <= RATE.freeSearch && u.photos <= RATE.freePhoto;
   $("uCost").innerHTML = inFree
@@ -735,6 +638,51 @@ $("resetUsage").addEventListener("click", () => {
 });
 
 /* =========================================================
+   お気に入り / 行きたいリスト
+========================================================= */
+function loadFavs() { try { return JSON.parse(localStorage.getItem("favs_v1") || "[]"); } catch (e) { return []; } }
+function saveFavs(a) { localStorage.setItem("favs_v1", JSON.stringify(a)); updateFavCount(); }
+function isFav(id) { return !!id && loadFavs().some((f) => f.id === id); }
+function toggleFav(r) {
+  let a = loadFavs();
+  if (a.some((f) => f.id === r.id)) { a = a.filter((f) => f.id !== r.id); toast("行きたいリストから削除しました"); }
+  else {
+    a.push({ id: r.id, name: r.name, lat: r.loc ? r.loc.lat() : null, lng: r.loc ? r.loc.lng() : null,
+             rating: r.rating, reviews: r.reviews, uri: r.uri, address: r.address });
+    toast("⭐ 行きたいリストに追加しました");
+  }
+  saveFavs(a);
+  renderFavs();
+}
+function removeFav(id) { saveFavs(loadFavs().filter((f) => f.id !== id)); renderFavs(); if (state.lastRows.length) applySortAndRender(); }
+function updateFavCount() { const n = loadFavs().length; $("favCount").textContent = n ? `（${n}件）` : "（まだありません）"; }
+function routeUrl(lat, lng) { return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`; }
+function renderFavs() {
+  updateFavCount();
+  const box = $("favList");
+  const favs = loadFavs();
+  if (!favs.length) { box.innerHTML = `<p class="fav-empty">気になるお店の☆を押すと、ここに貯まります。ツーリングの行き先候補にどうぞ。</p>`; return; }
+  const userLL = (state.userLoc && state.libs.geometry) ? new google.maps.LatLng(state.userLoc.lat, state.userLoc.lng) : null;
+  box.innerHTML = favs.map((f) => {
+    let dist = "";
+    if (userLL && f.lat != null) {
+      const d = state.libs.geometry.spherical.computeDistanceBetween(userLL, new google.maps.LatLng(f.lat, f.lng));
+      dist = ` ・ 現在地から ${fmtDist(d)}`;
+    }
+    const route = (f.lat != null) ? `<a href="${routeUrl(f.lat, f.lng)}" target="_blank" rel="noopener">🛣 ルート</a>` : "";
+    const gmap = f.uri ? `<a href="${f.uri}" target="_blank" rel="noopener">🗺 地図</a>` : "";
+    return `<div class="fav-item">
+      <div class="fi-body">
+        <div class="fi-name">${escapeHtml(f.name)}</div>
+        <div class="fi-meta">${f.rating != null ? "★" + f.rating.toFixed(1) : "評価なし"} ・ レビュー${(f.reviews || 0).toLocaleString()}件${dist}</div>
+      </div>
+      <div class="fi-actions">${route}${gmap}<button data-del="${escapeHtml(f.id)}">削除</button></div>
+    </div>`;
+  }).join("");
+  box.querySelectorAll("button[data-del]").forEach((b) => b.addEventListener("click", () => removeFav(b.dataset.del)));
+}
+
+/* =========================================================
    チップ生成
 ========================================================= */
 function buildChips() {
@@ -746,7 +694,6 @@ function buildChips() {
     label.innerHTML = `<input type="checkbox" value="${g.type}"${i === 0 ? " checked" : ""} /><span>${g.label}</span>`;
     gwrap.appendChild(label);
   });
-
   const awrap = $("areaChips");
   awrap.innerHTML = "";
   AREA_GROUPS.forEach((grp) => {
@@ -767,25 +714,20 @@ function buildChips() {
     d.appendChild(chips);
     awrap.appendChild(d);
   });
-  awrap.addEventListener("change", () => { $("areaText").value = ""; });
+  awrap.addEventListener("change", () => { $("areaText").value = ""; clearMapPicked(); });
 }
-function getSelectedTypes() {
-  return [...document.querySelectorAll("#genreChips input:checked")].map((el) => el.value);
-}
-$("clearGenres")?.addEventListener("click", () => {
-  document.querySelectorAll("#genreChips input:checked").forEach((el) => (el.checked = false));
-});
-$("clearArea")?.addEventListener("click", () => {
-  document.querySelectorAll('#areaChips input:checked').forEach((el) => (el.checked = false));
-});
+function getSelectedTypes() { return [...document.querySelectorAll("#genreChips input:checked")].map((el) => el.value); }
+$("clearGenres")?.addEventListener("click", () => { document.querySelectorAll("#genreChips input:checked").forEach((el) => (el.checked = false)); });
+$("clearArea")?.addEventListener("click", () => { document.querySelectorAll('#areaChips input:checked').forEach((el) => (el.checked = false)); });
 document.addEventListener("input", (e) => {
   if (e.target.id === "areaText" && e.target.value.trim()) {
     document.querySelectorAll('#areaChips input:checked').forEach((el) => (el.checked = false));
+    clearMapPicked();
   }
 });
 
 /* =========================================================
-   モード切替
+   モード / 探すもの
 ========================================================= */
 document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", applyMode));
 function applyMode() {
@@ -795,17 +737,19 @@ function applyMode() {
   $("searchBtn").textContent = mode === "area" ? "🗺️ このエリアで検索" : "📍 現在地で検索";
   $("minTripWrap").classList.toggle("hidden", mode === "current");
 }
+$("target").addEventListener("change", applyTarget);
+function applyTarget() {
+  const food = TARGETS[$("target").value].food;
+  $("genreBlock").classList.toggle("hidden", !food);
+  $("chainWrap").classList.toggle("hidden", !food);
+}
 
 /* =========================================================
    APIキー
 ========================================================= */
 function initKeyUI() {
-  if (state.apiKey) {
-    $("apiKey").value = state.apiKey;
-    $("keyStatus").textContent = "✅ APIキーは保存済みです。";
-  } else {
-    $("setupBox").open = true;
-  }
+  if (state.apiKey) { $("apiKey").value = state.apiKey; $("keyStatus").textContent = "✅ APIキーは保存済みです。"; }
+  else { $("setupBox").open = true; }
 }
 $("saveKey").addEventListener("click", async () => {
   const key = $("apiKey").value.trim();
@@ -814,13 +758,8 @@ $("saveKey").addEventListener("click", async () => {
   localStorage.setItem("gmaps_api_key", key);
   state.mapsLoaded = false;
   $("keyStatus").textContent = "読み込み中…";
-  try {
-    await loadMaps();
-    $("keyStatus").textContent = "✅ 読み込み成功。検索できます。";
-    $("setupBox").open = false;
-  } catch (e) {
-    $("keyStatus").textContent = "❌ 読み込み失敗: " + e.message;
-  }
+  try { await loadMaps(); await ensureMap(); $("keyStatus").textContent = "✅ 読み込み成功。検索できます。"; $("setupBox").open = false; }
+  catch (e) { $("keyStatus").textContent = "❌ 読み込み失敗: " + e.message; }
 });
 
 /* =========================================================
@@ -831,14 +770,10 @@ function loadMaps() {
     if (!state.apiKey) return reject(new Error("APIキーが未設定です"));
     if (state.mapsLoaded && window.google?.maps) return resolve();
     document.querySelectorAll("script[data-gmaps]").forEach((s) => s.remove());
-    window.__gmapsResolve = resolve;
-    window.__gmapsReject = reject;
+    window.__gmapsResolve = resolve; window.__gmapsReject = reject;
     const script = document.createElement("script");
-    script.dataset.gmaps = "1";
-    script.async = true;
-    script.src =
-      "https://maps.googleapis.com/maps/api/js?key=" +
-      encodeURIComponent(state.apiKey) +
+    script.dataset.gmaps = "1"; script.async = true;
+    script.src = "https://maps.googleapis.com/maps/api/js?key=" + encodeURIComponent(state.apiKey) +
       "&libraries=places,geometry,marker&language=ja&region=JP&loading=async&callback=__onGmapsReady";
     script.onerror = () => reject(new Error("スクリプトの読み込みに失敗しました"));
     document.head.appendChild(script);
@@ -851,9 +786,7 @@ window.__onGmapsReady = async function () {
     state.libs.marker = await google.maps.importLibrary("marker");
     state.mapsLoaded = true;
     if (window.__gmapsResolve) window.__gmapsResolve();
-  } catch (e) {
-    if (window.__gmapsReject) window.__gmapsReject(e);
-  }
+  } catch (e) { if (window.__gmapsReject) window.__gmapsReject(e); }
 };
 
 /* =========================================================
@@ -862,14 +795,11 @@ window.__onGmapsReady = async function () {
 async function ensureMap() {
   if (state.map) return;
   const { Map } = await google.maps.importLibrary("maps");
-  state.map = new Map($("map"), {
-    center: { lat: 34.97, lng: 136.62 }, zoom: 9, mapId: "DEMO_MAP_ID", clickableIcons: false,
-  });
+  state.map = new Map($("map"), { center: { lat: 34.97, lng: 136.62 }, zoom: 9, mapId: "DEMO_MAP_ID", clickableIcons: false });
+  state.map.addListener("click", (e) => setMapPicked(e.latLng.lat(), e.latLng.lng()));
+  if (state.pendingPick) { setMapPicked(state.pendingPick.lat, state.pendingPick.lng); state.pendingPick = null; }
 }
-function clearPlaceMarkers() {
-  state.placeMarkers.forEach((m) => (m.map = null));
-  state.placeMarkers = [];
-}
+function clearPlaceMarkers() { state.placeMarkers.forEach((m) => (m.map = null)); state.placeMarkers = []; }
 async function setUserMarker() {
   if (!state.userLoc) return;
   const { AdvancedMarkerElement, PinElement } = state.libs.marker;
@@ -885,6 +815,20 @@ async function setCenterMarker() {
   const pin = new PinElement({ background: "#12b76a", borderColor: "#fff", glyphColor: "#fff", glyph: "🏁", scale: 1.1 });
   state.centerMarker = new AdvancedMarkerElement({ map: state.map, position: state.searchCenter, title: state.centerLabel || "エリア中心", content: pin.element });
 }
+async function setMapPicked(lat, lng) {
+  state.mapPicked = { lat, lng };
+  document.querySelectorAll('#areaChips input:checked').forEach((el) => (el.checked = false));
+  $("areaText").value = "";
+  if (getMode() !== "area") { document.querySelector('input[name="mode"][value="area"]').checked = true; applyMode(); }
+  if (state.libs.marker && state.map) {
+    const { AdvancedMarkerElement, PinElement } = state.libs.marker;
+    if (state.pickMarker) state.pickMarker.map = null;
+    const pin = new PinElement({ background: "#7c3aed", borderColor: "#fff", glyphColor: "#fff", glyph: "指", scale: 1.1 });
+    state.pickMarker = new AdvancedMarkerElement({ map: state.map, position: state.mapPicked, title: "指定した地点", content: pin.element });
+  }
+  setStatus(`地図で地点を指定しました（${lat.toFixed(4)}, ${lng.toFixed(4)}）「このエリアで検索」を押してください`);
+}
+function clearMapPicked() { state.mapPicked = null; if (state.pickMarker) { state.pickMarker.map = null; state.pickMarker = null; } }
 
 /* =========================================================
    現在地
@@ -895,15 +839,9 @@ function getLocation() {
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       (err) => {
-        const msg = {
-          1: "位置情報の利用が許可されませんでした。ブラウザの設定を確認してください。",
-          2: "現在地を取得できませんでした。",
-          3: "位置情報の取得がタイムアウトしました。",
-        }[err.code] || err.message;
+        const msg = { 1: "位置情報の利用が許可されませんでした。ブラウザの設定を確認してください。", 2: "現在地を取得できませんでした。", 3: "位置情報の取得がタイムアウトしました。" }[err.code] || err.message;
         reject(new Error(msg));
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
   });
 }
 async function acquireLocation() {
@@ -911,14 +849,11 @@ async function acquireLocation() {
   state.userLoc = await getLocation();
   await ensureMap();
   await setUserMarker();
-  setStatus(`現在地を取得しました（${state.userLoc.lat.toFixed(4)}, ${state.userLoc.lng.toFixed(4)}）走行距離を表示できます`);
+  setStatus(`現在地を取得しました（${state.userLoc.lat.toFixed(4)}, ${state.userLoc.lng.toFixed(4)}）走行距離・到着予想を表示できます`);
 }
 $("locBtn").addEventListener("click", async () => {
-  try {
-    if (!state.mapsLoaded) await loadMaps();
-    await acquireLocation();
-    if (state.lastRows.length) applySortAndRender();
-  } catch (e) { setStatus(e.message, true); }
+  try { if (!state.mapsLoaded) await loadMaps(); await acquireLocation(); if (state.lastRows.length) applySortAndRender(); renderFavs(); }
+  catch (e) { setStatus(e.message, true); }
 });
 
 /* =========================================================
@@ -926,33 +861,20 @@ $("locBtn").addEventListener("click", async () => {
 ========================================================= */
 async function resolveArea(text) {
   const { Place } = state.libs.places;
-  const { places } = await Place.searchByText({
-    textQuery: text, fields: ["location", "displayName"],
-    maxResultCount: 1, language: "ja", region: "jp",
-  });
+  const { places } = await Place.searchByText({ textQuery: text, fields: ["location", "displayName"], maxResultCount: 1, language: "ja", region: "jp" });
   bumpUsage("searches", 1);
-  if (!places || !places.length || !places[0].location) {
-    throw new Error(`「${text}」の場所が見つかりませんでした。別の地名で試してください。`);
-  }
+  if (!places || !places.length || !places[0].location) throw new Error(`「${text}」の場所が見つかりませんでした。別の地名で試してください。`);
   const loc = places[0].location;
   return { center: { lat: loc.lat(), lng: loc.lng() }, label: places[0].displayName || text };
 }
 async function getSearchCenter() {
-  if (getMode() === "current") {
-    if (!state.userLoc) await acquireLocation();
-    return { center: state.userLoc, label: "現在地" };
-  }
+  if (getMode() === "current") { if (!state.userLoc) await acquireLocation(); return { center: state.userLoc, label: "現在地" }; }
   const radio = document.querySelector('#areaChips input:checked');
-  if (radio) {
-    const [lat, lng] = radio.value.split(",").map(Number);
-    return { center: { lat, lng }, label: radio.dataset.label };
-  }
+  if (radio) { const [lat, lng] = radio.value.split(",").map(Number); return { center: { lat, lng }, label: radio.dataset.label }; }
   const text = $("areaText").value.trim();
-  if (text) {
-    setStatus(`「${text}」の場所を調べています…`);
-    return await resolveArea(text);
-  }
-  throw new Error("エリアを1つ選ぶか、地域名を入力してください。");
+  if (text) { setStatus(`「${text}」の場所を調べています…`); return await resolveArea(text); }
+  if (state.mapPicked) return { center: state.mapPicked, label: "地図で指定した地点" };
+  throw new Error("エリアを選ぶ・地域名を入力・地図をタップ のいずれかで中心を決めてください。");
 }
 
 /* =========================================================
@@ -965,17 +887,11 @@ $("searchBtn").addEventListener("click", async () => {
     btn.disabled = true;
     if (!state.mapsLoaded) { setStatus("地図データを読み込み中…"); await loadMaps(); }
     const { center, label } = await getSearchCenter();
-    state.searchCenter = center;
-    state.centerLabel = label;
-    await ensureMap();
-    await setCenterMarker();
+    state.searchCenter = center; state.centerLabel = label;
+    await ensureMap(); await setCenterMarker();
     await runSearch();
-  } catch (e) {
-    setStatus(e.message, true);
-    console.error(e);
-  } finally {
-    btn.disabled = false;
-  }
+  } catch (e) { setStatus(e.message, true); console.error(e); }
+  finally { btn.disabled = false; }
 });
 
 async function runSearch() {
@@ -983,43 +899,48 @@ async function runSearch() {
   const { spherical } = state.libs.geometry;
 
   const keyword = $("keyword").value.trim();
+  const targetKey = $("target").value;
+  const target = TARGETS[targetKey];
   const selectedTypes = getSelectedTypes();
   const radius = Number($("radius").value);
   const minRating = Number($("minRating").value);
   const minReviews = Number($("minReviews").value);
   const maxPrice = Number($("maxPrice").value);
   const openNow = $("openNow").value === "open";
-  const excludeChains = $("excludeChains").checked;
+  const excludeChains = target.food && $("excludeChains").checked;
   const center = state.searchCenter;
 
   const fields = [
-    "displayName", "location", "rating", "userRatingCount",
-    "formattedAddress", "businessStatus", "regularOpeningHours",
-    "priceLevel", "googleMapsURI", "primaryTypeDisplayName", "types",
-    "photos", "reviews",
+    "id", "displayName", "location", "rating", "userRatingCount", "formattedAddress",
+    "businessStatus", "regularOpeningHours", "priceLevel", "googleMapsURI",
+    "primaryTypeDisplayName", "types", "photos", "reviews", "parkingOptions",
   ];
 
   setStatus(`「${state.centerLabel}」の周辺を検索中…`);
   let places = [];
 
-  if (keyword) {
-    const req = {
-      textQuery: keyword, fields,
-      locationBias: { center, radius },
-      maxResultCount: 20, language: "ja", region: "jp",
-    };
-    if (selectedTypes.length === 1) req.includedType = selectedTypes[0];
-    if (openNow) req.isOpenNow = true;
-    ({ places } = await Place.searchByText(req));
+  if (target.food) {
+    if (keyword) {
+      const req = { textQuery: keyword, fields, locationBias: { center, radius }, maxResultCount: 20, language: "ja", region: "jp" };
+      if (selectedTypes.length === 1) req.includedType = selectedTypes[0];
+      if (openNow) req.isOpenNow = true;
+      ({ places } = await Place.searchByText(req));
+    } else {
+      const req = { fields, locationRestriction: { center, radius }, maxResultCount: 20, rankPreference: SearchNearbyRankPreference.DISTANCE, language: "ja", region: "jp" };
+      req.includedPrimaryTypes = selectedTypes.length ? selectedTypes.slice(0, 50) : ["restaurant", "cafe", "bar", "bakery", "meal_takeaway"];
+      ({ places } = await Place.searchNearby(req));
+    }
   } else {
-    const req = {
-      fields, locationRestriction: { center, radius },
-      maxResultCount: 20, rankPreference: SearchNearbyRankPreference.DISTANCE,
-      language: "ja", region: "jp",
-    };
-    req.includedPrimaryTypes = selectedTypes.length ? selectedTypes.slice(0, 50)
-      : ["restaurant", "cafe", "bar", "bakery", "meal_takeaway"];
-    ({ places } = await Place.searchNearby(req));
+    const q = [target.q, keyword].filter(Boolean).join(" ");
+    if (q) {
+      const req = { textQuery: q, fields, locationBias: { center, radius }, maxResultCount: 20, language: "ja", region: "jp" };
+      if (target.type) req.includedType = target.type;
+      if (openNow) req.isOpenNow = true;
+      ({ places } = await Place.searchByText(req));
+    } else {
+      const req = { fields, locationRestriction: { center, radius }, maxResultCount: 20, rankPreference: SearchNearbyRankPreference.DISTANCE, language: "ja", region: "jp", includedPrimaryTypes: [target.type] };
+      ({ places } = await Place.searchNearby(req));
+    }
   }
   bumpUsage("searches", 1);
 
@@ -1028,19 +949,15 @@ async function runSearch() {
     const distCenter = p.location ? spherical.computeDistanceBetween(centerLL, p.location) : null;
     const priceNum = p.priceLevel != null ? (PRICE_MAP[p.priceLevel] ?? null) : null;
     const name = p.displayName || "（名称不明）";
+    const reviewList = p.reviews || [];
     return {
-      place: p, loc: p.location || null, name,
-      rating: p.rating ?? null,
-      reviews: p.userRatingCount ?? 0,
-      distCenter, priceNum,
-      address: p.formattedAddress || "",
-      openNow: p.regularOpeningHours?.openNow ?? null,
-      uri: p.googleMapsURI || null,
-      genre: p.primaryTypeDisplayName || "",
-      types: p.types || [],
-      photos: p.photos || [],
-      reviewList: p.reviews || [],
-      chain: isChain(name),
+      place: p, id: p.id || null, loc: p.location || null, name,
+      rating: p.rating ?? null, reviews: p.userRatingCount ?? 0, distCenter, priceNum,
+      address: p.formattedAddress || "", openNow: p.regularOpeningHours?.openNow ?? null,
+      uri: p.googleMapsURI || null, genre: p.primaryTypeDisplayName || "", types: p.types || [],
+      photos: p.photos || [], reviewList, chain: isChain(name),
+      parking: hasParking(p, reviewList),
+      periods: p.regularOpeningHours?.periods || null,
     };
   });
 
@@ -1050,18 +967,45 @@ async function runSearch() {
     if (maxPrice > 0 && r.priceNum !== null && r.priceNum > maxPrice) return false;
     if (openNow && r.openNow === false) return false;
     if (excludeChains && r.chain) return false;
-    if (keyword && selectedTypes.length > 1) {
-      if (!r.types.some((t) => selectedTypes.includes(t))) return false;
-    }
+    if (target.food && keyword && selectedTypes.length > 1) { if (!r.types.some((t) => selectedTypes.includes(t))) return false; }
     return true;
   });
 
-  // 表示されるサムネイル写真の枚数をコストに計上（1店1枚）
   bumpUsage("photos", rows.filter((r) => r.photos.length).length);
-
   state.lastRows = rows;
   state.lastTotal = places.length;
   applySortAndRender(true);
+}
+
+function hasParking(p, reviewList) {
+  const po = p.parkingOptions;
+  if (po && (po.freeParkingLot || po.paidParkingLot || po.freeStreetParking || po.paidStreetParking || po.freeGarageParking || po.paidGarageParking || po.valetParking)) return true;
+  // フォールバック：クチコミ本文から駐車に言及がないか
+  return (reviewList || []).some((rv) => /駐車|パーキング|駐輪|バイク置/.test(rv.text || ""));
+}
+
+/* =========================================================
+   到着時刻・営業判定
+========================================================= */
+function isOpenAt(periods, date) {
+  if (!periods || !periods.length) return null;
+  const nowMin = date.getDay() * 1440 + date.getHours() * 60 + date.getMinutes();
+  for (const p of periods) {
+    if (!p.open) continue;
+    if (!p.close) return true; // 24時間営業
+    const os = p.open.day * 1440 + p.open.hour * 60 + p.open.minute;
+    let ce = p.close.day * 1440 + p.close.hour * 60 + p.close.minute;
+    if (ce < os) ce += 7 * 1440;
+    if ((nowMin >= os && nowMin < ce) || (nowMin + 7 * 1440 >= os && nowMin + 7 * 1440 < ce)) return true;
+  }
+  return false;
+}
+function arrivalInfo(r) {
+  if (r.distMe == null) return null;
+  const mins = (r.distMe / 1000) / AVG_SPEED_KMH * 60;
+  const arr = new Date(Date.now() + mins * 60000);
+  const hh = String(arr.getHours()).padStart(2, "0"), mm = String(arr.getMinutes()).padStart(2, "0");
+  return { timeStr: `${hh}:${mm}`, open: r.periods ? isOpenAt(r.periods, arr) : null, mins: Math.round(mins) };
 }
 
 /* =========================================================
@@ -1079,6 +1023,7 @@ function computeDistances(rows) {
 function applySortAndRender(fresh = false) {
   const minTrip = Number($("minTrip").value);
   const sortBy = $("sortByInline").value;
+  const preferParking = $("preferParking").checked;
   let rows = [...state.lastRows];
   computeDistances(rows);
   if (minTrip > 0 && state.userLoc) rows = rows.filter((r) => r.distMe !== null && r.distMe >= minTrip);
@@ -1087,33 +1032,28 @@ function applySortAndRender(fresh = false) {
     if (sortBy === "reviews") return (b.reviews ?? 0) - (a.reviews ?? 0);
     return (a.primary ?? Infinity) - (b.primary ?? Infinity);
   });
+  if (preferParking) { const w = rows.filter((r) => r.parking), wo = rows.filter((r) => !r.parking); rows = [...w, ...wo]; }
   render(rows, state.lastTotal, fresh);
 }
 $("sortBy").addEventListener("change", (e) => { $("sortByInline").value = e.target.value; if (state.lastRows.length) applySortAndRender(); });
 $("sortByInline").addEventListener("change", (e) => { $("sortBy").value = e.target.value; applySortAndRender(); });
 $("minTrip").addEventListener("change", () => { if (state.lastRows.length) applySortAndRender(); });
+$("preferParking").addEventListener("change", () => { if (state.lastRows.length) applySortAndRender(); });
 
 function starString(rating) {
   if (rating === null) return "—";
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
+  const full = Math.floor(rating); const half = rating - full >= 0.5;
   return "★".repeat(full) + (half ? "☆" : "") + "☆".repeat(Math.max(0, 5 - full - (half ? 1 : 0)));
 }
-function fmtDist(m) {
-  if (m === null || m === undefined) return "距離不明";
-  return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(m < 10000 ? 2 : 1)} km`;
-}
+function fmtDist(m) { if (m === null || m === undefined) return "距離不明"; return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(m < 10000 ? 2 : 1)} km`; }
 function priceStr(n) { return n === null ? "" : "¥".repeat(Math.max(1, n)); }
 
 function render(rows, total, fit = false) {
   const listEl = $("list");
   listEl.innerHTML = "";
   $("resultsCard").style.display = "block";
-
   const filteredOut = total - rows.length;
-  $("resultCount").textContent =
-    `${rows.length} 件表示` + (filteredOut > 0 ? `（条件で ${filteredOut} 件を除外）` : "");
-
+  $("resultCount").textContent = `${rows.length} 件表示` + (filteredOut > 0 ? `（条件で ${filteredOut} 件を除外）` : "");
   clearPlaceMarkers();
 
   if (rows.length === 0) {
@@ -1130,53 +1070,60 @@ function render(rows, total, fit = false) {
   rows.forEach((r, i) => {
     const el = document.createElement("div");
     el.className = "place";
-    const openBadge =
-      r.openNow === true ? `<span class="badge open">営業中</span>` :
-      r.openNow === false ? `<span class="badge closed">営業時間外</span>` : "";
+    const openBadge = r.openNow === true ? `<span class="badge open">営業中</span>` : r.openNow === false ? `<span class="badge closed">営業時間外</span>` : "";
     const chainBadge = r.chain ? `<span class="badge chain">チェーン店</span>` : "";
+    const parkBadge = r.parking ? `<span class="badge park">🅿️ 駐車場</span>` : "";
     const priceBadge = r.priceNum !== null ? `<span class="price">${priceStr(r.priceNum)}</span>` : "";
 
     let distHtml = `<span class="dist">📍 ${r.primaryLabel} ${fmtDist(r.primary)}</span>`;
     if (r.distMe !== null && r.distCenter !== null) distHtml += `<span class="dist-sub">エリア中心 ${fmtDist(r.distCenter)}</span>`;
 
+    const arr = arrivalInfo(r);
+    let arrBadge = "";
+    if (arr) {
+      const cls = arr.open === true ? "arr-open" : arr.open === false ? "arr-closed" : "arr-unknown";
+      const txt = arr.open === true ? "営業中" : arr.open === false ? "時間外" : "";
+      arrBadge = `<span class="badge ${cls}">🕒 到着 ~${arr.timeStr}${txt ? " " + txt : ""}</span>`;
+    }
+
     let thumbHtml;
     if (r.photos.length) {
       const url = r.photos[0].getURI({ maxWidth: 200, maxHeight: 200 });
-      thumbHtml =
-        `<button class="thumb" data-photo="${i}" title="写真を見る">` +
-        `<img src="${url}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />` +
-        (r.photos.length > 1 ? `<span class="photo-count">📷 ${r.photos.length}</span>` : "") +
-        `</button>`;
-    } else {
-      thumbHtml = `<div class="thumb empty">🍽️</div>`;
-    }
+      thumbHtml = `<button class="thumb" data-photo="${i}" title="写真を見る"><img src="${url}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />` +
+        (r.photos.length > 1 ? `<span class="photo-count">📷 ${r.photos.length}</span>` : "") + `</button>`;
+    } else { thumbHtml = `<div class="thumb empty">🍽️</div>`; }
 
-    const reviewToggle = r.reviewList.length
-      ? `<button class="review-toggle" data-rev="${i}">💬 クチコミ ${r.reviewList.length}件 ▼</button>` : "";
+    const reviewToggle = r.reviewList.length ? `<button class="review-toggle" data-rev="${i}">💬 クチコミ ${r.reviewList.length}件 ▼</button>` : "";
+    const routeLink = r.loc ? `<a href="${routeUrl(r.loc.lat(), r.loc.lng())}" target="_blank" rel="noopener">🛣 ルート</a>` : "";
+    const saved = isFav(r.id);
 
     el.innerHTML = `
       <div class="num">${i + 1}</div>
       ${thumbHtml}
       <div class="body">
-        <p class="name">${escapeHtml(r.name)}</p>
+        <div class="name-row">
+          <p class="name">${escapeHtml(r.name)}</p>
+          <button class="fav ${saved ? "on" : ""}" title="行きたいリスト">${saved ? "★" : "☆"}</button>
+        </div>
         <div class="meta">
-          <span><span class="stars">${starString(r.rating)}</span>
-                <span class="rating-num">${r.rating !== null ? r.rating.toFixed(1) : "—"}</span></span>
+          <span><span class="stars">${starString(r.rating)}</span> <span class="rating-num">${r.rating !== null ? r.rating.toFixed(1) : "—"}</span></span>
           <span class="reviews">レビュー ${r.reviews.toLocaleString()} 件</span>
           ${distHtml}
-          ${priceBadge}
-          ${openBadge}
-          ${chainBadge}
+          ${priceBadge}${openBadge}${arrBadge}${parkBadge}${chainBadge}
           ${r.genre ? `<span class="reviews">${escapeHtml(r.genre)}</span>` : ""}
         </div>
         ${r.address ? `<p class="addr">${escapeHtml(r.address)}</p>` : ""}
         <div class="links">
-          ${r.uri ? `<a href="${r.uri}" target="_blank" rel="noopener">Googleマップで開く →</a>` : ""}
+          ${routeLink}
+          ${r.uri ? `<a href="${r.uri}" target="_blank" rel="noopener">🗺 Googleマップ</a>` : ""}
           ${reviewToggle}
         </div>
         <div class="reviews-box" data-revbox="${i}"></div>
       </div>`;
     listEl.appendChild(el);
+
+    const favBtn = el.querySelector(".fav");
+    favBtn.addEventListener("click", () => { toggleFav(r); const on = isFav(r.id); favBtn.classList.toggle("on", on); favBtn.textContent = on ? "★" : "☆"; });
 
     const thumbBtn = el.querySelector(".thumb[data-photo]");
     if (thumbBtn) thumbBtn.addEventListener("click", () => openGallery(r));
@@ -1194,10 +1141,7 @@ function render(rows, total, fit = false) {
     if (r.loc && state.map) {
       const pin = new PinElement({ background: "#ff5b4a", borderColor: "#fff", glyphColor: "#fff", glyph: String(i + 1) });
       const marker = new AdvancedMarkerElement({ map: state.map, position: r.loc, title: r.name, content: pin.element });
-      marker.addListener("click", () => {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.animate([{ background: "rgba(255,91,74,.15)" }, { background: "transparent" }], { duration: 1200 });
-      });
+      marker.addListener("click", () => { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.animate([{ background: "rgba(255,91,74,.15)" }, { background: "transparent" }], { duration: 1200 }); });
       state.placeMarkers.push(marker);
       bounds.extend(r.loc);
     }
@@ -1215,27 +1159,14 @@ function renderReviews(list) {
     const rating = rv.rating ?? null;
     const time = rv.relativePublishTimeDescription || "";
     const text = rv.text || "";
-    return `
-      <div class="review">
-        <div class="rhead">
-          ${avatar ? `<img class="ravatar" src="${avatar}" alt="" loading="lazy" />` : `<span class="ravatar"></span>`}
-          <span class="rauthor">${escapeHtml(author)}</span>
-          ${rating !== null ? `<span class="rstars">${starString(rating)}</span>` : ""}
-          <span class="rtime">${escapeHtml(time)}</span>
-        </div>
-        ${text ? `<p class="rtext">${escapeHtml(text)}</p>` : ""}
-      </div>`;
+    return `<div class="review"><div class="rhead">${avatar ? `<img class="ravatar" src="${avatar}" alt="" loading="lazy" />` : `<span class="ravatar"></span>`}<span class="rauthor">${escapeHtml(author)}</span>${rating !== null ? `<span class="rstars">${starString(rating)}</span>` : ""}<span class="rtime">${escapeHtml(time)}</span></div>${text ? `<p class="rtext">${escapeHtml(text)}</p>` : ""}</div>`;
   }).join("");
 }
 
 function openGallery(r) {
   $("modalName").textContent = r.name;
   const g = $("gallery");
-  g.innerHTML = r.photos.map((ph) => {
-    const url = ph.getURI({ maxWidth: 800, maxHeight: 800 });
-    return `<img src="${url}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />`;
-  }).join("");
-  // 同じ店の写真は初回だけコストに計上（再表示はブラウザキャッシュのため）
+  g.innerHTML = r.photos.map((ph) => `<img src="${ph.getURI({ maxWidth: 800, maxHeight: 800 })}" alt="${escapeHtml(r.name)}の写真" loading="lazy" />`).join("");
   if (!r._galleryCounted) { bumpUsage("photos", r.photos.length); r._galleryCounted = true; }
   $("modal").classList.add("open");
 }
@@ -1244,9 +1175,71 @@ $("modalClose").addEventListener("click", closeGallery);
 $("modal").addEventListener("click", (e) => { if (e.target.id === "modal") closeGallery(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeGallery(); });
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+/* =========================================================
+   条件をURLで共有・復元
+========================================================= */
+function buildShareParams() {
+  const p = new URLSearchParams();
+  p.set("mode", getMode());
+  p.set("target", $("target").value);
+  p.set("radius", $("radius").value);
+  p.set("minRating", $("minRating").value);
+  p.set("minReviews", $("minReviews").value);
+  p.set("maxPrice", $("maxPrice").value);
+  p.set("minTrip", $("minTrip").value);
+  p.set("openNow", $("openNow").value);
+  p.set("sortBy", $("sortBy").value);
+  if ($("excludeChains").checked) p.set("chains", "1");
+  if ($("preferParking").checked) p.set("park", "1");
+  const kw = $("keyword").value.trim(); if (kw) p.set("kw", kw);
+  const g = getSelectedTypes(); if (g.length) p.set("genres", g.join(","));
+  const radio = document.querySelector('#areaChips input:checked');
+  const text = $("areaText").value.trim();
+  if (radio) p.set("area", "p:" + radio.dataset.label);
+  else if (text) p.set("area", "t:" + text);
+  else if (state.mapPicked) p.set("area", `m:${state.mapPicked.lat.toFixed(5)},${state.mapPicked.lng.toFixed(5)}`);
+  return p;
+}
+$("shareBtn").addEventListener("click", async () => {
+  const url = location.origin + location.pathname + "#" + buildShareParams().toString();
+  try { await navigator.clipboard.writeText(url); toast("🔗 条件つきURLをコピーしました"); }
+  catch (e) { prompt("この条件つきURLをコピーしてください：", url); }
+});
+function applyFromUrl() {
+  if (!location.hash || location.hash.length < 2) return;
+  const p = new URLSearchParams(location.hash.slice(1));
+  const setVal = (id, key) => { if (p.has(key)) { const el = $(id); if (el) el.value = p.get(key); } };
+  if (p.has("mode")) { const r = document.querySelector(`input[name="mode"][value="${p.get("mode")}"]`); if (r) r.checked = true; }
+  setVal("target", "target"); setVal("radius", "radius"); setVal("minRating", "minRating");
+  setVal("minReviews", "minReviews"); setVal("maxPrice", "maxPrice"); setVal("minTrip", "minTrip");
+  setVal("openNow", "openNow"); setVal("keyword", "kw");
+  if (p.has("sortBy")) { $("sortBy").value = p.get("sortBy"); $("sortByInline").value = p.get("sortBy"); }
+  $("excludeChains").checked = p.get("chains") === "1";
+  $("preferParking").checked = p.get("park") === "1";
+  if (p.has("genres")) {
+    const set = new Set(p.get("genres").split(","));
+    document.querySelectorAll("#genreChips input").forEach((el) => (el.checked = set.has(el.value)));
+  }
+  if (p.has("area")) {
+    const a = p.get("area");
+    if (a.startsWith("p:")) {
+      const label = a.slice(2);
+      const radio = [...document.querySelectorAll('#areaChips input')].find((el) => el.dataset.label === label);
+      if (radio) { radio.checked = true; const d = radio.closest("details"); if (d) d.open = true; }
+    } else if (a.startsWith("t:")) { $("areaText").value = a.slice(2); }
+    else if (a.startsWith("m:")) { const [lat, lng] = a.slice(2).split(",").map(Number); if (isFinite(lat) && isFinite(lng)) state.pendingPick = { lat, lng }; }
+  }
+  applyMode(); applyTarget();
+  setStatus("共有された条件を復元しました。「検索」を押してください。");
+}
+
+/* =========================================================
+   PWA（Service Worker）
+========================================================= */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
 
 /* =========================================================
@@ -1254,12 +1247,13 @@ function escapeHtml(s) {
 ========================================================= */
 initTheme();
 buildChips();
+applyFromUrl();
 applyMode();
+applyTarget();
 initKeyUI();
 updateUsagePanel();
-if (state.apiKey) {
-  loadMaps().then(() => ensureMap()).catch((e) => setStatus("地図の初期化に失敗: " + e.message, true));
-}
+renderFavs();
+if (state.apiKey) { loadMaps().then(() => ensureMap()).catch((e) => setStatus("地図の初期化に失敗: " + e.message, true)); }
 </script>
 </body>
 </html>
